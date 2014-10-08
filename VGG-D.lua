@@ -16,6 +16,7 @@ torch.setdefaulttensortype('torch.FloatTensor')
 
 -- Input definition ------------------------------------------------------------
 input = torch.Tensor(3,224,224)
+if opt.input == 'cuda' then input = input:cuda() end
 
 -- Model definition ------------------------------------------------------------
 -- Convolution container
