@@ -67,8 +67,6 @@ convBlock:add(nn.SpatialMaxPooling(2,2,2,2))
 -- Defining classifier
 classifier = nn.Sequential()
 
-classifier = nn.Sequential()
-
 classifier:add(nn.Reshape(512 * 7^2))
 
 classifier:add(nn.Linear(512 * 7^2, 4096))
@@ -77,7 +75,7 @@ classifier:add(nn.ReLU())
 classifier:add(nn.Linear(4096, 4096))
 classifier:add(nn.ReLU())
 
-classifier:add(nn.Linear(4096, 1024))
+classifier:add(nn.Linear(4096, 1000))
 classifier:add(nn.LogSoftMax())
 
 -- Full model
