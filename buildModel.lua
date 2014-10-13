@@ -1,5 +1,6 @@
 --------------------------------------------------------------------------------
 -- Build model, given its parameters
+-- No <dropout> since only forward model is considered
 --------------------------------------------------------------------------------
 -- Alfredo Canziani, Oct 14
 --------------------------------------------------------------------------------
@@ -70,7 +71,9 @@ function buildModel(nFeatureMaps, filterSize, convPadding, convStride, poolSize,
    local model = nn.Sequential()
    model:add(convBlock)
    model:add(classifier)
+   model.mapSize = mapSize
+   model.neurons = neurons
 
-   return model, mapSize, neurons
+   return model
 
 end

@@ -31,8 +31,8 @@ mapSize[0]      = 224
 nFeatureMaps[0] = 3
 
 -- Building model --------------------------------------------------------------
-model, mapSize, neurons = buildModel(nFeatureMaps, filterSize, convPadding,
-   convStride, poolSize, poolStride, hiddenUnits, mapSize)
+model = buildModel(nFeatureMaps, filterSize, convPadding, convStride, poolSize,
+   poolStride, hiddenUnits, mapSize)
 
 -- Profile net (forward only) --------------------------------------------------
 iterations = 10
