@@ -1,5 +1,6 @@
 --------------------------------------------------------------------------------
 -- Profiling network (forward only)
+-- Computational time and estimation of number of operations
 --------------------------------------------------------------------------------
 -- Alfredo Canziani, Oct 14
 --------------------------------------------------------------------------------
@@ -7,7 +8,9 @@
 -- Requires --------------------------------------------------------------------
 require 'xlua'
 
-function profileNet(model, nFeatureMaps, mapSize, iterations)
+local function time(name, model, nFeatureMaps, mapSize, iterations)
+   print(string.format('Profiling %s, %d iterations', name, iterations))
+
    -- Input definition ---------------------------------------------------------
    local input = torch.Tensor(nFeatureMaps[0], mapSize[0], mapSize[0])
 
@@ -24,3 +27,10 @@ function profileNet(model, nFeatureMaps, mapSize, iterations)
    return time
 
 end
+
+local function ops(nFeatureMaps, filterSize, convPadding, convStride, poolSize,
+   poolStride, hiddenUnits, mapSize, time)
+
+end
+
+profileNet = {time = time, ops = ops}

@@ -1,9 +1,5 @@
 --------------------------------------------------------------------------------
--- ILSVRC 2014 classification winner
--- VGG, single network D
---------------------------------------------------------------------------------
--- Very Deep Convolutional Networks for Large-Scale Image Recognition
--- http://arxiv.org/abs/1409.1556
+-- Profiler main file
 --------------------------------------------------------------------------------
 -- Alfredo Canziani, Oct 14
 --------------------------------------------------------------------------------
@@ -15,6 +11,15 @@ require 'profileNet'
 
 -- Options ---------------------------------------------------------------------
 torch.setdefaulttensortype('torch.FloatTensor')
+
+--------------------------------------------------------------------------------
+-- ILSVRC 2014 classification winner
+-- VGG, single network D
+name = 'VGG-D'
+--------------------------------------------------------------------------------
+-- Very Deep Convolutional Networks for Large-Scale Image Recognition
+-- http://arxiv.org/abs/1409.1556
+--------------------------------------------------------------------------------
 
 -- Network parameters ----------------------------------------------------------
 nFeatureMaps = {64,64,128,128,256,256,256,512,512,512,512,512,512}
@@ -37,7 +42,9 @@ model = buildModel(nFeatureMaps, filterSize, convPadding, convStride, poolSize,
 -- Profile net (forward only) --------------------------------------------------
 iterations = 10
 cuda = false
-time = profileNet(model, nFeatureMaps, mapSize, iterations, cuda)
+time = profileNet.time(name, model, nFeatureMaps, mapSize, iterations, cuda)
+operations = profileNet.ops(nFeatureMaps, filterSize, convPadding, convStride,
+   poolSize, poolStride, hiddenUnits, mapSize, time)
 
 
 
