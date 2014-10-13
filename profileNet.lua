@@ -22,7 +22,7 @@ local function time(name, model, nFeatureMaps, mapSize, iterations)
    end
 
    time = timer:time().real/iterations
-   print(string.format('Forward time %.2f ms\n', time))
+   print(string.format('Forward average time %.2f ms\n', time * 1e3))
 
    return time
 
