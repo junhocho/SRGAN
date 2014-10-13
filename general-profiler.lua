@@ -6,8 +6,8 @@
 
 -- Requires --------------------------------------------------------------------
 require 'nn'
-require 'buildModel'
-require 'profileNet'
+require 'src/buildModel'
+require 'src/profileNet'
 
 -- Options ---------------------------------------------------------------------
 torch.setdefaulttensortype('torch.FloatTensor')
