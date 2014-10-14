@@ -12,7 +12,7 @@ function buildModel(nFeatureMaps, filterSize, convPadding, convStride, poolSize,
    -- Feature maps size and neurons number
    local neurons = {}
    for i = 1, #nFeatureMaps do
-      mapSize[i] = (mapSize[i-1] + 2*convPadding[i] - filterSize[i]) / convStride[i] + 1
+      mapSize[i] = (mapSize[i-1]+2*convPadding[i]-filterSize[i])/convStride[i]+1
       mapSize[i] = (mapSize[i] - poolSize[i]) / poolStride[i] + 1
       neurons[i] = mapSize[i]^2 * nFeatureMaps[i]
    end
