@@ -32,7 +32,7 @@ hiddenUnits  = {4096, 4096, 1000}
 
 -- Set colour input
 mapSize         = {}
-mapSize[0]      = 224
+mapSize[0]      = {224, 224}
 nFeatureMaps[0] = 3
 
 -- Building model --------------------------------------------------------------

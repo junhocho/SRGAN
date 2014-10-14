@@ -11,10 +11,13 @@ function buildModel(nFeatureMaps, filterSize, convPadding, convStride, poolSize,
    -- Computing useful figures -------------------------------------------------
    -- Feature maps size and neurons number
    local neurons = {}
+   local f = math.floor
    for i = 1, #nFeatureMaps do
-      mapSize[i] = (mapSize[i-1]+2*convPadding[i]-filterSize[i])/convStride[i]+1
-      mapSize[i] = (mapSize[i] - poolSize[i]) / poolStride[i] + 1
-      neurons[i] = mapSize[i]^2 * nFeatureMaps[i]
+      mapSize[i] = {}
+      mapSize[i][1] = f((mapSize[i-1][2] + 2 * convPadding[i] - filterSize[i]) /
+         convStride[i]) + 1
+      mapSize[i][2] = f((mapSize[i][1] - poolSize[i]) / poolStride[i]) + 1
+      neurons[i] = mapSize[i][2]^2 * nFeatureMaps[i]
    end
    for _, h in ipairs(hiddenUnits) do
       table.insert(neurons, h)
@@ -71,7 +74,6 @@ function buildModel(nFeatureMaps, filterSize, convPadding, convStride, poolSize,
    local model = nn.Sequential()
    model:add(convBlock)
    model:add(classifier)
-   model.mapSize = mapSize
    model.neurons = neurons
 
    return model
