@@ -15,7 +15,7 @@ local n = sys.COLORS.none
 
 -- Public function -------------------------------------------------------------
 function buildModel(name, nFeatureMaps, filterSize, convPadding, convStride,
-   poolSize, poolStride, hiddenUnits, mapSize)
+   poolSize, poolStride, hiddenUnits, mapSize, cuda)
    pf('Building %s model...', r..name..n)
    collectgarbage()
 
@@ -45,13 +45,23 @@ function buildModel(name, nFeatureMaps, filterSize, convPadding, convStride,
    for i = 1, #nFeatureMaps do
 
       -- Convolution
-      convBlock:add(
-         nn.SpatialConvolutionMM(
-            nFeatureMaps[i-1], nFeatureMaps[i],
-            filterSize[i], filterSize[i],
-            convStride[i], convStride[i],
-            convPadding[i])
-         )
+      if not cuda and convStride[i] > 1 then -- non Cuda MM stride not supported
+         convBlock:add(
+            nn.SpatialConvolution(
+               nFeatureMaps[i-1], nFeatureMaps[i],
+               filterSize[i], filterSize[i],
+               convStride[i], convStride[i],
+               convPadding[i])
+            )
+      else
+         convBlock:add(
+            nn.SpatialConvolutionMM(
+               nFeatureMaps[i-1], nFeatureMaps[i],
+               filterSize[i], filterSize[i],
+               convStride[i], convStride[i],
+               convPadding[i])
+            )
+      end
 
       -- Non linearity
       convBlock:add(nn.ReLU())
