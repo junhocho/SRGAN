@@ -56,8 +56,8 @@ local function ops(nFeatureMaps, filterSize, convPadding, convStride, poolSize,
 
    local convOps = torch.Tensor(#nFeatureMaps)
    local poolOps = torch.zeros(#nFeatureMaps)
-   for i, nbMap in ipairs(nFeatureMaps) do
-      convOps[i] = 2 * nFeatureMaps[i-1] * nbMap * filterSize[i]^2 *
+   for i = 1, #nFeatureMaps do
+      convOps[i] = 2 * nFeatureMaps[i-1] * nFeatureMaps[i] * filterSize[i]^2 *
          mapSize[i][1]^2 + 2 * mapSize[i][1] -- bias + ReLU
       if poolSize[i] > 1 then
          poolOps[i] = poolSize[i]^2 * mapSize[i][2]^2

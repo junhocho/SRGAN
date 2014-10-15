@@ -42,12 +42,12 @@ function buildModel(name, nFeatureMaps, filterSize, convPadding, convStride,
    -- Convolution container
    local convBlock = nn.Sequential()
 
-   for i, nbMap in ipairs(nFeatureMaps) do
+   for i = 1, #nFeatureMaps do
 
       -- Convolution
       convBlock:add(
          nn.SpatialConvolutionMM(
-            nFeatureMaps[i-1], nbMap,
+            nFeatureMaps[i-1], nFeatureMaps[i],
             filterSize[i], filterSize[i],
             convStride[i], convStride[i],
             convPadding[i])
