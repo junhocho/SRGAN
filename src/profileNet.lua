@@ -23,14 +23,26 @@ local function time(name, model, nFeatureMaps, mapSize, iterations, cuda, totOps
    local input = torch.Tensor(nFeatureMaps[0], mapSize[0][1], mapSize[0][1])
 
    local timer = torch.Timer()
+   local convOutput
    for i = 1, iterations do
       xlua.progress(i, iterations)
-      model:forward(input)
+      convOutput = model.modules[1]:forward(input)
       if cuda then cutorch.synchronize() end
    end
+   convTime = timer:time().real/iterations
 
-   time = timer:time().real/iterations
+   timer = torch.Timer()
+   for i = 1, iterations do
+      xlua.progress(i, iterations)
+      model.modules[2]:forward(convOutput)
+      if cuda then cutorch.synchronize() end
+   end
+   MLPTime = timer:time().real/iterations
+
+   time = convTime + MLPTime
    pf('   Forward average time on %sTHIS%s machine: %.2f ms', b, n,  time * 1e3)
+   pf('    + Convolution time: %.2f ms', convTime * 1e3)
+   pf('    + MLP time: %.2f ms', MLPTime * 1e3)
    pf('   Performance for %sTHIS%s machine: %.2f G-Ops/s\n', b, n,
       totOps * 1e-9 / time)
 
