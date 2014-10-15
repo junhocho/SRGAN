@@ -36,15 +36,13 @@ mapSize[0]      = {224, 224}
 nFeatureMaps[0] = 3
 
 -- Building model --------------------------------------------------------------
-model = buildModel(nFeatureMaps, filterSize, convPadding, convStride, poolSize,
-   poolStride, hiddenUnits, mapSize)
+model = buildModel(name, nFeatureMaps, filterSize, convPadding, convStride,
+   poolSize, poolStride, hiddenUnits, mapSize)
 
 -- Profile net (forward only) --------------------------------------------------
-iterations = 10
-cuda = false
-time = profileNet.time(name, model, nFeatureMaps, mapSize, iterations, cuda)
 operations = profileNet.ops(nFeatureMaps, filterSize, convPadding, convStride,
-   poolSize, poolStride, hiddenUnits, mapSize, time)
+   poolSize, poolStride, hiddenUnits, mapSize)
 
-
-
+iterations = 10; cuda = false
+time = profileNet.time(name, model, nFeatureMaps, mapSize, iterations, cuda,
+   operations)
