@@ -10,7 +10,7 @@ name = 'Krizhevsky'
 -- Network parameters ----------------------------------------------------------
 nFeatureMaps = {96, 256, 384, 384, 256}
 filterSize   = {11,   5,   3,   3,   3}
-convPadding  = { 0,   0,   0,   0,   0}
+convPadding  = { 3,   2,   1,   1,   1}
 convStride   = { 4,   1,   1,   1,   1}
 poolSize     = { 3,   3,   1,   1,   3}
 poolStride   = { 2,   2,   1,   1,   2}
