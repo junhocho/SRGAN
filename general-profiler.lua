@@ -8,7 +8,7 @@
 require 'nn'
 require 'src/buildModel'
 require 'src/profileNet'
-require 'pl'
+lapp = require 'pl.lapp'
 
 -- Options ---------------------------------------------------------------------
 local opt = lapp [[
@@ -19,9 +19,7 @@ local opt = lapp [[
 torch.setdefaulttensortype('torch.FloatTensor')
 
 -- Get model -------------------------------------------------------------------
-if opt.net == 'VGG-D' then require 'models/VGG-D'
-elseif opt.net == 'Kriz' then require 'models/Kriz'
-else error('Unknown model') end
+require('models/' .. opt.net)
 
 -- Building model --------------------------------------------------------------
 model = buildModel(name, nFeatureMaps, filterSize, convPadding, convStride,
