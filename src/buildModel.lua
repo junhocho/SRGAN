@@ -46,6 +46,10 @@ function buildModel(name, nFeatureMaps, filterSize, convPadding, convStride,
 
       -- Convolution
       if not cuda and convStride[i] > 1 then -- non Cuda MM stride not supported
+         p = convPadding[i]
+         if p > 0 then
+            convBlock:add(nn.SpatialZeroPadding(p,p,p,p))
+         end
          convBlock:add(
             nn.SpatialConvolution(
                nFeatureMaps[i-1], nFeatureMaps[i],
