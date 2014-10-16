@@ -12,8 +12,9 @@ require 'sys'
 -- Local definitions -----------------------------------------------------------
 local pf = function(...) print(string.format(...)) end
 local r = sys.COLORS.red
+local g = sys.COLORS.green
 local n = sys.COLORS.none
-local b = sys.COLORS.blue
+local THIS = sys.COLORS.blue .. 'THIS' .. n
 
 local function time(name, model, nFeatureMaps, mapSize, iterations, cuda, totOps)
    pf('Profiling %s, %d iterations', r..name..n, iterations)
@@ -21,6 +22,7 @@ local function time(name, model, nFeatureMaps, mapSize, iterations, cuda, totOps
 
    -- Input definition ---------------------------------------------------------
    local input = torch.Tensor(nFeatureMaps[0], mapSize.real[0], mapSize.real[0])
+   if cuda then input = input:cuda() end
 
    local timer = torch.Timer()
    local convOutput
@@ -40,10 +42,13 @@ local function time(name, model, nFeatureMaps, mapSize, iterations, cuda, totOps
    MLPTime = timer:time().real/iterations
 
    time = convTime + MLPTime
-   pf('   Forward average time on %sTHIS%s machine: %.2f ms', b, n,  time * 1e3)
+   local d -- device
+   if not cuda then d = 'CPU'
+   else d = g .. 'GPU' .. n end
+   pf('   Forward average time on %s %s: %.2f ms', THIS, d, time * 1e3)
    pf('    + Convolution time: %.2f ms', convTime * 1e3)
    pf('    + MLP time: %.2f ms', MLPTime * 1e3)
-   pf('   Performance for %sTHIS%s machine: %.2f G-Ops/s\n', b, n,
+   pf('   Performance for %s %s: %.2f G-Ops/s\n', THIS, d,
       totOps * 1e-9 / time)
 
    return time

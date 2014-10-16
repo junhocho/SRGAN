@@ -111,6 +111,11 @@ function buildModel(name, nFeatureMaps, filterSize, convPadding, convStride,
    pf('   Total number of trainable parameters: %d',
       model:getParameters():size(1))
 
+   if cuda then
+      require 'cunn'
+      model:cuda()
+   end
+
    return model
 
 end
