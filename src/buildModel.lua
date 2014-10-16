@@ -24,14 +24,16 @@ function buildModel(name, nFeatureMaps, filterSize, convPadding, convStride,
    local neurons = {}
    neurons.real = {}
    neurons.pool = {}
+   mapSize.real = {[0] = mapSize[0]}
+   mapSize.pool = {[0] = mapSize[0]}
+   mapSize[0]   = nil
    local f = math.floor
    for i = 1, #nFeatureMaps do
-      mapSize[i] = {}
-      mapSize[i][1] = f((mapSize[i-1][2] + 2 * convPadding[i] - filterSize[i]) /
+      mapSize.real[i] = f((mapSize.pool[i-1] + 2 * convPadding[i] - filterSize[i]) /
          convStride[i]) + 1
-      mapSize[i][2] = f((mapSize[i][1] - poolSize[i]) / poolStride[i]) + 1
-      neurons.real[i] = mapSize[i][1]^2 * nFeatureMaps[i]
-      neurons.pool[i] = mapSize[i][2]^2 * nFeatureMaps[i]
+      mapSize.pool[i] = f((mapSize.real[i] - poolSize[i]) / poolStride[i]) + 1
+      neurons.real[i] = mapSize.real[i]^2 * nFeatureMaps[i]
+      neurons.pool[i] = mapSize.pool[i]^2 * nFeatureMaps[i]
    end
    for _, h in ipairs(hiddenUnits) do
       table.insert(neurons.real, h)

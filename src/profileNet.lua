@@ -20,7 +20,7 @@ local function time(name, model, nFeatureMaps, mapSize, iterations, cuda, totOps
    collectgarbage()
 
    -- Input definition ---------------------------------------------------------
-   local input = torch.Tensor(nFeatureMaps[0], mapSize[0][1], mapSize[0][1])
+   local input = torch.Tensor(nFeatureMaps[0], mapSize.real[0], mapSize.real[0])
 
    local timer = torch.Timer()
    local convOutput
@@ -58,9 +58,9 @@ local function ops(nFeatureMaps, filterSize, convPadding, convStride, poolSize,
    local poolOps = torch.zeros(#nFeatureMaps)
    for i = 1, #nFeatureMaps do
       convOps[i] = 2 * nFeatureMaps[i-1] * nFeatureMaps[i] * filterSize[i]^2 *
-         mapSize[i][1]^2 + 2 * mapSize[i][1] -- bias + ReLU
+         mapSize.real[i]^2 + 2 * mapSize.real[i] -- bias + ReLU
       if poolSize[i] > 1 then
-         poolOps[i] = poolSize[i]^2 * mapSize[i][2]^2
+         poolOps[i] = poolSize[i]^2 * mapSize.pool[i]^2
       end
    end
    local MLPOps = torch.Tensor(#hiddenUnits)
