@@ -9,14 +9,14 @@
 require 'sys'
 
 -- Local definitions -----------------------------------------------------------
-local pf = function(...) print(string.format(...)) end
+local pf = function(...) io.write(string.format(...)); io.flush() end
 local r = sys.COLORS.red
 local n = sys.COLORS.none
 
 -- Public function -------------------------------------------------------------
 function buildModel(name, nFeatureMaps, filterSize, convPadding, convStride,
-   poolSize, poolStride, hiddenUnits, mapSize, cuda)
-   pf('Building %s model...', r..name..n)
+   poolSize, poolStride, hiddenUnits, mapSize, cuda, save)
+   pf('Building %s model...\n', r..name..n)
    collectgarbage()
 
    -- Computing useful figures -------------------------------------------------
@@ -107,9 +107,19 @@ function buildModel(name, nFeatureMaps, filterSize, convPadding, convStride,
    model:add(classifier)
    model.neurons = neurons
 
-   pf('   Total number of neurons: %d', torch.Tensor(neurons.real):sum())
-   pf('   Total number of trainable parameters: %d',
+   pf('   Total number of neurons: %d\n', torch.Tensor(neurons.real):sum())
+   pf('   Total number of trainable parameters: %d\n',
       model:getParameters():size(1))
+
+   if save == 'a' then
+      pf('Saving model as model.net.ascii... ')
+      torch.save('model.net.ascii', model, 'ascii')
+      pf('Done.\n')
+   elseif save == 'b' then
+      pf('Saving model as model.net... ')
+      torch.save('model.net', model)
+      pf('Done.\n')
+   end
 
    if cuda then
       require 'cunn'
