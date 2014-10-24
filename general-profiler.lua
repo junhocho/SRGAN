@@ -12,7 +12,7 @@ lapp = require 'pl.lapp'
 
 -- Options ---------------------------------------------------------------------
 local opt = lapp [[
- -n, --net  (string)     Network to profile (VGG-D,Kriz)
+ -n, --net  (string)     Network to profile (VGG-D,Kriz,HW04)
  -c, --cuda              Cuda option, default false
  -i, --iter (default 10) Averaging iterations
 ]]
@@ -28,6 +28,7 @@ model = buildModel(name, nFeatureMaps, filterSize, convPadding, convStride,
 -- Profile net (forward only) --------------------------------------------------
 operations = profileNet.ops(nFeatureMaps, filterSize, convPadding, convStride,
    poolSize, poolStride, hiddenUnits, mapSize)
+print(operations)
 
 time = profileNet.time(name, model, nFeatureMaps, mapSize, opt.iter, opt.cuda,
    operations)

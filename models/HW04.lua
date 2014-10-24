@@ -2,9 +2,6 @@
 -- e-Lab nn-X hardware model 04
 name = 'HW04'
 --------------------------------------------------------------------------------
--- ImageNet Classification with Deep Convolutional Neural Networks
--- http://www.cs.toronto.edu/~fritz/absps/imagenet.pdf
---------------------------------------------------------------------------------
 
 -- Network parameters ----------------------------------------------------------
 nFeatureMaps = {16, 32, 32}

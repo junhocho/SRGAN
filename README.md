@@ -1,13 +1,14 @@
-# State Of The Art (SOTA) models 
+# State Of The Art (SOTA) models
 
 Repository of SOTA deep neural network models for feed-forward speed profiling
 
-## Running notes on Odroid XU3
-8 cores, 4 slow and 4 fast, slow performance (4172.40 ms) fix with `sudo taskset -c 4-7 th test.lua`
+## Running the code
 
-## VGG (ILSVRC 14 classification winner)
+```
+th general-profiler.lua --net <modelName>
+th general-profiler.lua --net <modelName> --cuda
+```
+The flags can be also shortened: `--net` -> `-n` and `--cuda` -> `-c`.
 
-| Device      | Time [ms] |
-|-------------|----------:|
-| MacBook Pro | 418.33    |
-| Odroid XU3  | 3237.75   |
+## Running notes on specific cores
+8 cores, 4 slow and 4 fast, slow performance fix with `sudo taskset -c 4-7 th ...`
