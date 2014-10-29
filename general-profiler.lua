@@ -12,7 +12,8 @@ lapp = require 'pl.lapp'
 
 -- Options ---------------------------------------------------------------------
 local opt = lapp [[
- -n, --net  (string)     Network to profile (VGG-D|Kriz|HW04)
+ -n, --net  (string)     Network to profile (VGG-D|Kriz|HW04|4-16Test|CamFind1|
+                         halfKriz|largeNetTest)
  -c, --cuda              Cuda option, default false
  -i, --iter (default 10) Averaging iterations
  -s, --save (default -)  Save the float model to file as <model.net.ascii> in
