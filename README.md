@@ -1,6 +1,6 @@
-# State Of The Art (SOTA) models
+# Torch7-profiling
 
-Repository of SOTA deep neural network models for feed-forward speed profiling
+Repository of neural network models for feed-forward speed profiling
 
 ## Running the code
 
