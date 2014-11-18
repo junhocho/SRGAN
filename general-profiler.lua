@@ -31,7 +31,6 @@ model = buildModel(name, nFeatureMaps, filterSize, convPadding, convStride,
 -- Profile net (forward only) --------------------------------------------------
 operations = profileNet.ops(nFeatureMaps, filterSize, convPadding, convStride,
    poolSize, poolStride, hiddenUnits, mapSize)
-print(operations)
 
 time = profileNet.time(name, model, nFeatureMaps, mapSize, opt.iter, opt.cuda,
    operations)
