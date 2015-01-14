@@ -25,21 +25,33 @@ local function time(name, model, nFeatureMaps, mapSize, iterations, cuda, totOps
    if cuda then input = input:cuda() end
 
    local timer = torch.Timer()
+   local timing = torch.FloatTensor(iterations)
+   local t = 0
+
    local convOutput
-   for i = 1, iterations do
+   for i = 1, (iterations+1) do
       xlua.progress(i, iterations)
+      timer:reset()
+
       convOutput = model.modules[1]:forward(input)
       if cuda then cutorch.synchronize() end
-   end
-   convTime = timer:time().real/iterations
 
-   timer = torch.Timer()
-   for i = 1, iterations do
+      t = timer:time().real
+      timing[(i%iterations)+1] = t
+   end
+   convTime = timing:mean()
+
+   for i = 1, (iterations+1) do
       xlua.progress(i, iterations)
+      timer:reset()
+
       model.modules[2]:forward(convOutput)
       if cuda then cutorch.synchronize() end
+
+      t = timer:time().real
+      timing[(i%iterations)+1] = t
    end
-   MLPTime = timer:time().real/iterations
+   MLPTime = timing:mean()
 
    time = convTime + MLPTime
    local d -- device
