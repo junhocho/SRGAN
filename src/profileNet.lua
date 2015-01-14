@@ -65,10 +65,11 @@ local function ops(nFeatureMaps, filterSize, convPadding, convStride, poolSize,
       local input = nFeatureMaps[i-1]
       local output = nFeatureMaps[i]
       local output_map = mapSize.real[i]^2
-      local ops_kernel = 2 * filterSize[i]^2 -- kernel + bias
+      local ops_kernel = 2 * filterSize[i]^2 -- kernel + comb
+      local ops_bias = output * output_map
       local ops_relu = output * output_map
 
-      convOps[i] = input * output * output_map * ops_kernel + ops_relu
+      convOps[i] = input * output * output_map * ops_kernel + ops_bias + ops_relu
 
       if poolSize[i] > 1 then
          poolOps[i] = poolSize[i]^2 * mapSize.pool[i]^2
