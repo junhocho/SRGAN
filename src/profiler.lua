@@ -36,9 +36,13 @@ local function calc_ops(def, pos, ops, input, map)
 
       ops.conv = ops.conv + (input * output * output_map * ops_kernel + ops_bias)
 
-      if layer.relu then
-         local ops_relu = output * output_map
-         ops.conv = ops.conv + ops_relu
+      if layer.nlmp then
+         if ('ReLU' == layer.nlmp) or ('LogSoftMax' == layer.nlmp) then
+            local ops_nlmp = output * output_map
+            ops.conv = ops.conv + ops_nlmp
+         else
+            error('do not know this non-linear mapper module', layer.nlmp)
+         end
       end
 
       if not layer.pool then
@@ -73,14 +77,13 @@ local function calc_ops(def, pos, ops, input, map)
       local ops_bias = output
       ops.mlp = ops.mlp + ops_weights + ops_bias
 
-      if layer.relu then
-         local ops_relu = output
-         ops.mlp = ops.mlp + ops_relu
-      end
-
-      if layer.lsmax then
-         local ops_lsmax = output
-         ops.mlp = ops.mlp + ops_lsmax
+      if layer.nlmp then
+         if ('ReLU' == layer.nlmp) or ('LogSoftMax' == layer.nlmp) then
+            local ops_nlmp = output
+            ops.mlp = ops.mlp + ops_nlmp
+         else
+            error('do not know this non-linear mapper module', layer.nlmp)
+         end
       end
 
       -- calculate neurons for linear
