@@ -55,7 +55,7 @@ local function time(name, model, nFeatureMaps, mapSize, iterations, cuda, totOps
 
    time = convTime + MLPTime
    local d -- device
-   if not cuda then d = 'CPU'
+   if not cuda then d = g .. 'CPU' .. n
    else d = g .. 'GPU' .. n end
    pf('   Forward average time on %s %s: %.2f ms', THIS, d, time * 1e3)
    pf('    + Convolution time: %.2f ms', convTime * 1e3)
