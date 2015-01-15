@@ -105,12 +105,14 @@ local function parse_cpu(def, pos, net, input)
       })
    end
 
-   if layer.relu then
-      net:add(nn.ReLU())
-   end
-
-   if layer.lsmax then
-      net:add(nn.LogSoftMax())
+   if layer.nlmp then
+      if 'ReLU' == layer.nlmp then
+         net:add(nn.ReLU())
+      elseif 'LogSoftMax' == layer.nlmp then
+         net:add(nn.LogSoftMax())
+      else
+         error('do not know this non-linear mapper module', layer.nlmp)
+      end
    end
 
    if layer.reshape then

@@ -6,19 +6,19 @@ return {
          [1] = {
             output = 16,
             conv = { k = 9, s = 4, },
-            relu = true,
+            nlmp = 'ReLU',
          },
          [2] = {
             output = 32,
             conv = { k = 9, },
             pool = 2,
-            relu = true,
+            nlmp = 'ReLU',
          },
          [3] = {
             output = 32,
             conv = { k = 9, },
             pool = 2,
-            relu = true,
+            nlmp = 'ReLU',
          },
       },
       [2] = {
@@ -27,15 +27,15 @@ return {
          },
          [2] = {
             linear = 128,
-            relu = true,
+            nlmp = 'ReLU',
          },
          [3] = {
             linear = 128,
-            relu = true,
+            nlmp = 'ReLU',
          },
          [4] = {
             linear = 1000,
-            lsmax = true,
+            nlmp = 'LogSoftMax',
          },
       },
    },

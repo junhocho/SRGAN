@@ -7,7 +7,7 @@ return {
             output = 16,
             conv = { k = 10, },
             pool = { size = 2, stride = 1, },
-            relu = true,
+            nlmp = 'ReLU',
          },
       },
       [2] = {
@@ -16,11 +16,11 @@ return {
          },
          [2] = {
             linear = 1,
-            relu = true,
+            nlmp = 'ReLU',
          },
          [3] = {
             linear = 1,
-            lsmax = true,
+            nlmp = 'LogSoftMax',
          },
       },
    },
