@@ -108,6 +108,8 @@ local function parse_cpu(def, pos, net, input)
    if layer.nlmp then
       if 'ReLU' == layer.nlmp then
          net:add(nn.ReLU())
+      elseif 'Threshold' == layer.nlmp then
+         net:add(nn.Threshold())
       elseif 'LogSoftMax' == layer.nlmp then
          net:add(nn.LogSoftMax())
       else

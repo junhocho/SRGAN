@@ -37,7 +37,10 @@ local function calc_ops(def, pos, ops, input, map)
       ops.conv = ops.conv + (input * output * output_map * ops_kernel + ops_bias)
 
       if layer.nlmp then
-         if ('ReLU' == layer.nlmp) or ('LogSoftMax' == layer.nlmp) then
+         if ('ReLU' == layer.nlmp)
+               or ('Threshold' == layer.nlmp)
+               or ('LogSoftMax' == layer.nlmp) then
+
             local ops_nlmp = output * output_map
             ops.conv = ops.conv + ops_nlmp
          else
@@ -78,7 +81,10 @@ local function calc_ops(def, pos, ops, input, map)
       ops.mlp = ops.mlp + ops_weights + ops_bias
 
       if layer.nlmp then
-         if ('ReLU' == layer.nlmp) or ('LogSoftMax' == layer.nlmp) then
+         if ('ReLU' == layer.nlmp)
+               or ('Threshold' == layer.nlmp)
+               or ('LogSoftMax' == layer.nlmp) then
+
             local ops_nlmp = output
             ops.mlp = ops.mlp + ops_nlmp
          else
