@@ -107,7 +107,7 @@ function buildModel(name, nFeatureMaps, filterSize, convPadding, convStride,
    model:add(classifier)
    model.neurons = neurons
 
-   pf('   Total number of neurons: %d\n', torch.Tensor(neurons.real):sum())
+   pf('   Total number of neurons: %d\n', torch.Tensor(neurons.pool):sum())
    pf('   Total number of trainable parameters: %d\n',
       model:getParameters():size(1))
 
