@@ -137,11 +137,11 @@ function parser:network(net, img, pos, sequence, layer)
    local node_last = (#net['modules'] == pos)
 
    while 'nn.Sequential' == node_name do
-      local tmp, sub_sequence = self:network(node, img)
+      local sub_sequence, tmp = self:network(node, img)
       table.insert(sequence, sub_sequence)
 
       if node_last then
-         return tmp, sequence
+         return sequence, tmp
       end
 
       img = tmp
@@ -161,7 +161,7 @@ function parser:network(net, img, pos, sequence, layer)
    if node_last then
       table.insert(sequence, layer)
 
-      return img, sequence
+      return sequence, img
    end
 
    return self:network(net, img, pos+1, sequence, layer)
