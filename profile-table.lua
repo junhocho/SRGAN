@@ -27,6 +27,8 @@ model = require('tables/' .. opt.net)
 pf('Building %s model...', r..model.name..n)
 net, eye = build:cpu(model)
 eye = eye or 100
+img = torch.FloatTensor(model.channel, eye, eye)
+
 
 if opt.save == 'a' then
    pf('Saving model as model.net.ascii... ')
@@ -38,12 +40,7 @@ elseif opt.save == 'b' then
    pf('Done.\n')
 end
 
---img = torch.FloatTensor(model.channel, eye, eye)
---ops = profile:ops(net, img)
-ops = profile:calc_ops(model.def, model.channel, {
-   width  = eye,
-   height = eye,
-})
+ops = profile:ops(net, img)
 ops_total = ops.conv + ops.pool + ops.mlp
 
 pf('   Total number of neurons: %d', ops.neurons)
@@ -55,16 +52,13 @@ pf('    + Conv/Pool/MLP: %.2fG/%.2fk/%.2fM(-Ops)\n',
 
 
 pf('Profiling %s, %d iterations', r..model.name..n, opt.iter)
-time, time_conv, time_mlp = profile:time(model, net, opt.iter, {
-   width  = eye,
-   height = eye,
-})
+time = profile:time(net, img, opt.iter)
 
 local d = g..'CPU'..n
-pf('   Forward average time on %s %s: %.2f ms', THIS, d, time * 1e3)
-if (time_conv ~= 0) and (time_mlp ~= 0) then
-   pf('    + Convolution time: %.2f ms', time_conv * 1e3)
-   pf('    + MLP time: %.2f ms', time_mlp * 1e3)
+pf('   Forward average time on %s %s: %.2f ms', THIS, d, time.total * 1e3)
+if (time.conv ~= 0) and (time.mlp ~= 0) then
+   pf('    + Convolution time: %.2f ms', time.conv * 1e3)
+   pf('    + MLP time: %.2f ms', time.mlp * 1e3)
 end
 
-pf('   Performance for %s %s: %.2f G-Ops/s\n', THIS, d, ops_total * 1e-9 / time)
+pf('   Performance for %s %s: %.2f G-Ops/s\n', THIS, d, ops_total * 1e-9 / time.total)

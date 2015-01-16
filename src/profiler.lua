@@ -142,26 +142,24 @@ local function calc_time_cpu(net, img, iterations)
    return timing:mean(), tmp
 end
 
-function profiler:time(model, net, iterations,  map)
-   local img = torch.FloatTensor(model.channel, map.height, map.width)
-   local time = 0
-   local time_conv = 0
-   local time_mlp = 0
+function profiler:time(net, img, iterations)
+   iterations = iterations or 10
+   local time = { total = 0, conv = 0, mlp = 0, }
 
-   if 2 ~= #model.def then
+   if 2 ~= #net['modules'] then
 
-      time = calc_time_cpu(net, img, iterations)
+      time.total = calc_time_cpu(net, img, iterations)
 
    else
       local tmp = false
 
-      time_conv, tmp = calc_time_cpu(net.modules[1], img, iterations)
-      time_mlp       = calc_time_cpu(net.modules[2], tmp, iterations)
+      time.conv, tmp = calc_time_cpu(net.modules[1], img, iterations)
+      time.mlp       = calc_time_cpu(net.modules[2], tmp, iterations)
 
-      time = time_conv + time_mlp
+      time.total = time.conv + time.mlp
    end
 
-   return time, time_conv, time_mlp
+   return time
 end
 
 return profiler
