@@ -2,64 +2,40 @@ local profiler = {}
 local xlua = assert(require('xlua'))
 local parser = assert(require('./parser'))
 
-
-function profiler:calc_ops(def, input, map, pos, ops)
-   pos = pos or 1
-   ops = ops or {conv = 0, pool = 0, mlp = 0, neurons = 0}
-
-   local layer = assert(def[pos], 'no layer at position')
-   local output = layer.output or input
-
-   while 0 ~= #layer do
-      ops, input, map = self:calc_ops(layer, input, map, 1, ops)
-
-      if (#def == pos) then
-         return ops, input, map
-      end
-
-      pos = pos+1
-      layer = assert(def[pos], 'no layer at position')
-      output = layer.output or input
+local function calc_conv(layer, input, map, ops)
+   local output = assert(layer.output)
+   local k = layer.conv.k
+   local p = layer.conv.p or 0
+   if ('boolean' == type(p)) and p then
+      -- auto generate a padding value to give same output size as input
+      p = math.floor((k-1)/2)
    end
+   local s = layer.conv.s or 1
 
-   -- calculate ops for conv
-   if layer.conv then
-      local k = layer.conv.k
-      local p = layer.conv.p or 0
-      if ('boolean' == type(p)) and p then
-         -- auto generate a padding value to give same output size as input
-         p = math.floor((k-1)/2)
-      end
-      local s = layer.conv.s or 1
+   map.width  = math.floor((map.width  + (2 * p) - k + 1) / s)
+   map.height = math.floor((map.height + (2 * p) - k + 1) / s)
+   local output_map = map.width * map.height
+   local ops_kernel = (2 * k^2) -- kernel + comb
+   local ops_bias = output * output_map
 
-      map.width  = math.floor((map.width  + (2 * p) - k + 1) / s)
-      map.height = math.floor((map.height + (2 * p) - k + 1) / s)
-      local output_map = map.width * map.height
-      local ops_kernel = (2 * k^2) -- kernel + comb
-      local ops_bias = output * output_map
+   ops.conv = ops.conv + (input * output * output_map * ops_kernel + ops_bias)
 
-      ops.conv = ops.conv + (input * output * output_map * ops_kernel + ops_bias)
+   if layer.nlmp then
+      if not ( ('ReLU' == layer.nlmp)
+            or ('Threshold' == layer.nlmp)
+            or ('LogSoftMax' == layer.nlmp)) then
 
-      if layer.nlmp then
-         if ('ReLU' == layer.nlmp)
-               or ('Threshold' == layer.nlmp)
-               or ('LogSoftMax' == layer.nlmp) then
-
-            local ops_nlmp = output * output_map
-            ops.conv = ops.conv + ops_nlmp
-         else
-            error('do not know this non-linear mapper module', layer.nlmp)
-         end
-      end
-
-      if not layer.pool then
-         -- calculate neurons for conv without pooling
-         ops.neurons = ops.neurons + (output * output_map)
+         error('do not know this non-linear mapper module', layer.nlmp)
+      else
+         local ops_nlmp = output * output_map
+         ops.conv = ops.conv + ops_nlmp
       end
    end
 
-   -- calculate ops for pool
-   if layer.pool then
+   if not layer.pool then
+      -- calculate neurons for conv without pooling
+      ops.neurons = ops.neurons + (output * output_map)
+   else
       local size = layer.pool
       local stride = layer.pool
       if 'table' == type(layer.pool) then
@@ -77,32 +53,60 @@ function profiler:calc_ops(def, input, map, pos, ops)
       ops.neurons = ops.neurons + (output * output_map)
    end
 
-   -- calculate ops for linear
-   if layer.linear then
-      output = layer.linear
-      local ops_weights = (2 * input * output)
-      local ops_bias = output
-      ops.mlp = ops.mlp + ops_weights + ops_bias
+   return output
+end
 
-      if layer.nlmp then
-         if ('ReLU' == layer.nlmp)
-               or ('Threshold' == layer.nlmp)
-               or ('LogSoftMax' == layer.nlmp) then
+local function calc_linear(layer, input, ops)
+   local output = assert(layer.linear)
+   local ops_weights = (2 * input * output)
+   local ops_bias = output
+   ops.mlp = ops.mlp + ops_weights + ops_bias
 
-            local ops_nlmp = output
-            ops.mlp = ops.mlp + ops_nlmp
-         else
-            error('do not know this non-linear mapper module', layer.nlmp)
-         end
+   if layer.nlmp then
+      if not ( ('ReLU' == layer.nlmp)
+            or ('Threshold' == layer.nlmp)
+            or ('LogSoftMax' == layer.nlmp)) then
+
+         error('do not know this non-linear mapper module', layer.nlmp)
+      else
+         local ops_nlmp = output
+         ops.mlp = ops.mlp + ops_nlmp
       end
-
-      -- calculate neurons for linear
-      ops.neurons = ops.neurons + output
    end
 
-   -- calculate new output
-   if layer.reshape then
+   -- calculate neurons for linear
+   ops.neurons = ops.neurons + output
+
+   return output
+end
+
+function profiler:calc_ops(def, input, map, pos, ops)
+   pos = pos or 1
+   ops = ops or {conv = 0, pool = 0, mlp = 0, neurons = 0}
+   local layer = assert(def[pos], 'no layer at position')
+
+   while 0 ~= #layer do
+      ops, input, map = self:calc_ops(layer, input, map, 1, ops)
+
+      if (#def == pos) then
+         return ops, input, map
+      end
+
+      pos = pos+1
+      layer = assert(def[pos], 'no layer at position')
+   end
+
+   if layer.conv then
+      -- calculate ops for conv
+      output = calc_conv(layer, input, map, ops)
+   elseif layer.linear then
+      -- calculate ops for linear
+      output = calc_linear(layer, input, ops)
+   elseif layer.reshape then
+      -- calculate new output after reshape
       output = (layer.reshape * layer.reshape * input)
+   else
+      error('unknown layer type')
    end
 
    if (#def == pos) then
@@ -120,6 +124,7 @@ function profiler:ops(net, img)
 
    return self:calc_ops(def, channel, map)
 end
+
 
 local function calc_time_cpu(net, img, iterations)
    local tmp = false
