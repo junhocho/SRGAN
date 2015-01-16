@@ -38,7 +38,9 @@ elseif opt.save == 'b' then
    pf('Done.\n')
 end
 
-ops = profile:ops(model, {
+--img = torch.FloatTensor(model.channel, eye, eye)
+--ops = profile:ops(net, img)
+ops = profile:calc_ops(model.def, model.channel, {
    width  = eye,
    height = eye,
 })

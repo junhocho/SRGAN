@@ -1,13 +1,17 @@
 local profiler = {}
 local xlua = assert(require('xlua'))
+local parser = assert(require('./parser'))
 
 
-local function calc_ops(def, pos, ops, input, map)
+function profiler:calc_ops(def, input, map, pos, ops)
+   pos = pos or 1
+   ops = ops or {conv = 0, pool = 0, mlp = 0, neurons = 0}
+
    local layer = assert(def[pos], 'no layer at position')
    local output = layer.output or input
 
    while 0 ~= #layer do
-      ops, input, map = calc_ops(layer, 1, ops, input, map)
+      ops, input, map = self:calc_ops(layer, input, map, 1, ops)
 
       if (#def == pos) then
          return ops, input, map
@@ -105,13 +109,16 @@ local function calc_ops(def, pos, ops, input, map)
       return ops, output, map
    end
 
-   return calc_ops(def, pos+1, ops, output, map)
+   return self:calc_ops(def, output, map, pos+1, ops)
 end
 
-function profiler:ops(model, map)
-   local ops = {conv = 0, pool = 0, mlp = 0, neurons = 0}
+function profiler:ops(net, img)
+   assert(img:dim() == 3, 'ops image needs to have 3 dimensions')
+   local channel = img:size(1)
+   local map = { width  = img:size(3), height = img:size(2), }
+   local def = parser:network(net, img)
 
-   return calc_ops(model.def, 1, ops, model.channel, map)
+   return self:calc_ops(def, channel, map)
 end
 
 local function calc_time_cpu(net, img, iterations)
