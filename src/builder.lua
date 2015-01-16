@@ -142,6 +142,24 @@ local function generate_linear(layer, net, input)
    return net, output
 end
 
+local function generate_transform(layer, net, input)
+   local transform = layer.transform
+   local output = 0
+
+   if 'Reshape' == transform.name then
+      output = (transform.size * transform.size * input)
+      print('net:add(nn.Reshape('..output..'))')
+      net:add(nn.Reshape(output))
+
+      -- save transform size for eye calculation
+      eye_output = transform.size
+   else
+      error('do not know this transform module', transform.name)
+   end
+
+   return net, output
+end
+
 local function parse_cpu(def, pos, net, input)
    local layer = def[pos]
    local output = layer.output or input
@@ -164,13 +182,8 @@ local function parse_cpu(def, pos, net, input)
       net, output = generate_conv(layer, net, input)
    elseif layer.linear then
       net, output = generate_linear(layer, net, input)
-   elseif layer.reshape then
-      output = (layer.reshape * layer.reshape * input)
-      print('net:add(nn.Reshape('..output..'))')
-      net:add(nn.Reshape(output))
-
-      -- save transform size for eye calculation
-      eye_output = layer.reshape
+   elseif layer.transform then
+      net, output = generate_transform(layer, net, input)
    end
 
    if (#def == pos) then

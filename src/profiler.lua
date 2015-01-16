@@ -80,6 +80,20 @@ local function calc_linear(layer, input, ops)
    return output
 end
 
+local function calc_transform(layer, input)
+   local transform = layer.transform
+   local output = 0
+
+   if 'Reshape' == transform.name then
+      -- calculate new output after reshape
+      output = (transform.size * transform.size * input)
+   else
+      error('do not know this transform module', transform.name)
+   end
+
+   return output
+end
+
 function profiler:calc_ops(def, input, map, pos, ops)
    pos = pos or 1
    ops = ops or {conv = 0, pool = 0, mlp = 0, neurons = 0}
@@ -102,9 +116,9 @@ function profiler:calc_ops(def, input, map, pos, ops)
    elseif layer.linear then
       -- calculate ops for linear
       output = calc_linear(layer, input, ops)
-   elseif layer.reshape then
-      -- calculate new output after reshape
-      output = (layer.reshape * layer.reshape * input)
+   elseif layer.transform then
+      -- calculate ops for transfrom
+      output = calc_transform(layer, input)
    else
       error('unknown layer type')
    end

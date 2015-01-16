@@ -104,7 +104,10 @@ local process_node = {
          layer = {}
       end
 
-      layer.reshape = img:size(2)
+      layer.transform = {
+         name = 'Reshape',
+         size = img:size(2),
+      }
 
       img = node:forward(img)
       return img, sequence, layer

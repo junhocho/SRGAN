@@ -34,7 +34,10 @@ return {
       },
       [2] = {
          [1] = {
-            reshape = 6,
+            transform = {
+               name = 'Reshape',
+               size = 6,
+            },
          },
          [2] = {
             linear = 128,
