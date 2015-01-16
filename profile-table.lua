@@ -21,14 +21,14 @@ local opt = lapp [[
 ]]
 torch.setdefaulttensortype('torch.FloatTensor')
 
--- Get model definition
+
+-- get model definition
 model = require('tables/' .. opt.net)
 
 pf('Building %s model...', r..model.name..n)
 net, eye = build:cpu(model)
 eye = eye or 100
 img = torch.FloatTensor(model.channel, eye, eye)
-
 
 if opt.save == 'a' then
    pf('Saving model as model.net.ascii... ')
@@ -40,6 +40,8 @@ elseif opt.save == 'b' then
    pf('Done.\n')
 end
 
+
+-- calculate the number of operations performed by the network
 ops = profile:ops(net, img)
 ops_total = ops.conv + ops.pool + ops.mlp
 
@@ -51,6 +53,7 @@ pf('    + Conv/Pool/MLP: %.2fG/%.2fk/%.2fM(-Ops)\n',
    ops.conv * 1e-9, ops.pool * 1e-3, ops.mlp * 1e-6)
 
 
+-- time and average over a number of iterations
 pf('Profiling %s, %d iterations', r..model.name..n, opt.iter)
 time = profile:time(net, img, opt.iter)
 
