@@ -25,8 +25,9 @@ torch.setdefaulttensortype('torch.FloatTensor')
 -- get model definition
 model = require('tables/' .. opt.net)
 
-pf('Building %s model...', r..model.name..n)
+pf('Building %s model...\n', r..model.name..n)
 net, eye = build:cpu(model)
+pf('\n')
 eye = eye or 100
 img = torch.FloatTensor(model.channel, eye, eye)
 

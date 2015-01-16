@@ -34,6 +34,12 @@ local function generate_conv(layer, net, input)
    local conv_s = layer.conv.s or 1
 
    if (conv_s == 1) then
+      print('net:add(nn.SpatialConvolutionMM('
+         ..input..',  '..output..' , '
+         ..conv_k..', '..conv_k..' , '
+         ..conv_s..', '..conv_s..' , '
+         ..conv_p..'))')
+
       net:add( nn.SpatialConvolutionMM
          ( input,  output
          , conv_k, conv_k
@@ -43,8 +49,16 @@ local function generate_conv(layer, net, input)
       )
    else
       if (conv_p > 0) then
+         print('net:add(nn.SpatialZeroPadding('
+            ..conv_p..', '..conv_p..', '..conv_p..', '..conv_p..'))')
+
          net:add(nn.SpatialZeroPadding( conv_p, conv_p, conv_p, conv_p ))
       end
+
+      print('net:add(nn.SpatialConvolution('
+         ..input..',  '..output..' , '
+         ..conv_k..', '..conv_k..' , '
+         ..conv_s..', '..conv_s..'))')
 
       net:add( nn.SpatialConvolution
          ( input,  output
@@ -70,6 +84,9 @@ local function generate_conv(layer, net, input)
          stride = layer.pool.stride
       end
 
+      print('net:add(nn.SpatialMaxPooling('
+         ..size..', '..size..', '..stride..', '..stride..'))')
+
       net:add( nn.SpatialMaxPooling
          ( size,   size
          , stride, stride
@@ -86,10 +103,13 @@ local function generate_conv(layer, net, input)
 
    if layer.nlmp then
       if 'ReLU' == layer.nlmp then
+         print('net:add(nn.ReLU())')
          net:add(nn.ReLU())
       elseif 'Threshold' == layer.nlmp then
+         print('net:add(nn.Threshold())')
          net:add(nn.Threshold())
       elseif 'LogSoftMax' == layer.nlmp then
+         print('net:add(nn.LogSoftMax())')
          net:add(nn.LogSoftMax())
       else
          error('do not know this non-linear mapper module', layer.nlmp)
@@ -101,14 +121,18 @@ end
 
 local function generate_linear(layer, net, input)
    local output = assert(layer.linear)
+   print('net:add(nn.Linear('..input..', '..output..'))')
    net:add(nn.Linear(input, output))
 
    if layer.nlmp then
       if 'ReLU' == layer.nlmp then
+         print('net:add(nn.ReLU())')
          net:add(nn.ReLU())
       elseif 'Threshold' == layer.nlmp then
+         print('net:add(nn.Threshold())')
          net:add(nn.Threshold())
       elseif 'LogSoftMax' == layer.nlmp then
+         print('net:add(nn.LogSoftMax())')
          net:add(nn.LogSoftMax())
       else
          error('do not know this non-linear mapper module', layer.nlmp)
@@ -142,6 +166,7 @@ local function parse_cpu(def, pos, net, input)
       net, output = generate_linear(layer, net, input)
    elseif layer.reshape then
       output = (layer.reshape * layer.reshape * input)
+      print('net:add(nn.Reshape('..output..'))')
       net:add(nn.Reshape(output))
 
       -- save transform size for eye calculation
