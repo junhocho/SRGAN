@@ -23,66 +23,44 @@ local function eye_calc(pos, output)
    return eye_calc(pos-1, input)
 end
 
-local function parse_cpu(def, pos, net, input)
-   local layer = def[pos]
-   local output = layer.output or input
-
-   while 0 ~= #layer do
-      local nest_net, nest_output = parse_cpu(layer, 1, nn.Sequential(), input)
-      net:add(nest_net)
-
-      if (#def == pos) then
-         return net, nest_output
-      end
-
-      input = nest_output
-      pos = pos+1
-      layer = def[pos]
-      output = layer.output or input
+local function generate_conv(layer, net, input)
+   local output = assert(layer.output)
+   local conv_k = assert(layer.conv.k, 'conv def needs kernel def at min')
+   local conv_p = layer.conv.p or 0
+   if ('boolean' == type(conv_p)) and conv_p then
+      -- auto generate a padding value to give same output size as input
+      conv_p = math.floor((conv_k-1)/2)
    end
+   local conv_s = layer.conv.s or 1
 
-   if layer.conv then
-      local conv_k = assert(layer.conv.k, 'conv def needs kernel def at min')
-      local conv_p = layer.conv.p or 0
-      if ('boolean' == type(conv_p)) and conv_p then
-         -- auto generate a padding value to give same output size as input
-         conv_p = math.floor((conv_k-1)/2)
-      end
-      local conv_s = layer.conv.s or 1
-
-      if (conv_s == 1) then
-         net:add( nn.SpatialConvolutionMM
-            ( input,  output
-            , conv_k, conv_k
-            , conv_s, conv_s
-            , conv_p
-            )
+   if (conv_s == 1) then
+      net:add( nn.SpatialConvolutionMM
+         ( input,  output
+         , conv_k, conv_k
+         , conv_s, conv_s
+         , conv_p
          )
-      else
-         if (conv_p > 0) then
-            net:add(nn.SpatialZeroPadding( conv_p, conv_p, conv_p, conv_p ))
-         end
-
-         net:add( nn.SpatialConvolution
-            ( input,  output
-            , conv_k, conv_k
-            , conv_s, conv_s
-            )
-         )
+      )
+   else
+      if (conv_p > 0) then
+         net:add(nn.SpatialZeroPadding( conv_p, conv_p, conv_p, conv_p ))
       end
 
-      table.insert(eye_ops, {
-         name = 'conv',
-         k = conv_k,
-         p = conv_p,
-         s = conv_s,
-      })
+      net:add( nn.SpatialConvolution
+         ( input,  output
+         , conv_k, conv_k
+         , conv_s, conv_s
+         )
+      )
    end
 
-   if layer.linear then
-      output = layer.linear
-      net:add(nn.Linear(input, output))
-   end
+   -- save eye calculation operation
+   table.insert(eye_ops, {
+      name = 'conv',
+      k = conv_k,
+      p = conv_p,
+      s = conv_s,
+   })
 
    if layer.pool then
       local size = layer.pool
@@ -98,6 +76,7 @@ local function parse_cpu(def, pos, net, input)
          )
       )
 
+      -- save eye calculation operation
       table.insert(eye_ops, {
          name   = 'pool',
          size   = size,
@@ -117,10 +96,55 @@ local function parse_cpu(def, pos, net, input)
       end
    end
 
-   if layer.reshape then
+   return net, output
+end
+
+local function generate_linear(layer, net, input)
+   local output = assert(layer.linear)
+   net:add(nn.Linear(input, output))
+
+   if layer.nlmp then
+      if 'ReLU' == layer.nlmp then
+         net:add(nn.ReLU())
+      elseif 'Threshold' == layer.nlmp then
+         net:add(nn.Threshold())
+      elseif 'LogSoftMax' == layer.nlmp then
+         net:add(nn.LogSoftMax())
+      else
+         error('do not know this non-linear mapper module', layer.nlmp)
+      end
+   end
+
+   return net, output
+end
+
+local function parse_cpu(def, pos, net, input)
+   local layer = def[pos]
+   local output = layer.output or input
+
+   while 0 ~= #layer do
+      local nest_net, nest_output = parse_cpu(layer, 1, nn.Sequential(), input)
+      net:add(nest_net)
+
+      if (#def == pos) then
+         return net, nest_output
+      end
+
+      input = nest_output
+      pos = pos+1
+      layer = def[pos]
+      output = layer.output or input
+   end
+
+   if layer.conv then
+      net, output = generate_conv(layer, net, input)
+   elseif layer.linear then
+      net, output = generate_linear(layer, net, input)
+   elseif layer.reshape then
       output = (layer.reshape * layer.reshape * input)
       net:add(nn.Reshape(output))
 
+      -- save transform size for eye calculation
       eye_output = layer.reshape
    end
 
