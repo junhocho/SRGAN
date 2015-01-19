@@ -5,8 +5,9 @@ Repository of neural network models for feed-forward speed profiling
 ## Running the code
 
 ```
-th general-profiler.lua --net <modelName>
-th general-profiler.lua --net <modelName> --cuda
+th profile-model.lua --table <modelName>
+th profile-model.lua --net <modelName>
+th profile-model.lua --array <modelName>
 ```
 The flags can be also shortened: `--net` -> `-n` and `--cuda` -> `-c`.
 
