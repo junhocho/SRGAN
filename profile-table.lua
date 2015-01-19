@@ -12,8 +12,7 @@ local n = sys.COLORS.none
 local THIS = sys.COLORS.blue .. 'THIS' .. n
 
 local opt = lapp [[
- -n, --net  (default halfKriz)   Network to profile (VGG-D | Kriz | HW04 |
-                           4-16Test | CamFind1 | halfKriz | largeNetTest)
+ -t, --table   (default ./tables/Kriz.lua) Network to profile
 
  -i, --iter (default 10)   Averaging iterations
  -s, --save (default -)    Save the float model to file as <model.net.ascii> in
@@ -23,7 +22,7 @@ torch.setdefaulttensortype('torch.FloatTensor')
 
 
 -- get model definition
-model = require('tables/' .. opt.net)
+model = require(opt.table)
 
 pf('Building %s model...\n', r..model.name..n)
 net, eye = build:cpu(model)
