@@ -12,9 +12,11 @@ local n = sys.COLORS.none
 local THIS = sys.COLORS.blue .. 'THIS' .. n
 
 local opt = lapp [[
- -n, --net  (default halfKriz)   Network to profile (VGG-D | Kriz | HW04 |
-                           4-16Test | CamFind1 | halfKriz | largeNetTest)
+ -t, --table   (default ./tables/Kriz.lua) Network to profile
+ -n, --net     (default '')   Network to profile
+ -a, --array   (default '')   Network to profile
 
+ -e, --eye  (default 0)    Network eye
  -i, --iter (default 10)   Averaging iterations
  -s, --save (default -)    Save the float model to file as <model.net.ascii> in
                            [a]scii or as <model.net> in [b]inary format (a|b)
@@ -22,13 +24,31 @@ local opt = lapp [[
 torch.setdefaulttensortype('torch.FloatTensor')
 
 
--- get model definition
-model = require('tables/' .. opt.net)
 
-pf('Building %s model...\n', r..model.name..n)
-net, eye = build:cpu(model)
-pf('\n')
+if opt.net ~= '' then
+   -- get network definition
+   model = assert(require(opt.net))
+   pf('Building %s model from network...\n', r..model.name..n)
+   net = model:mknet()
+   eye = model.eye
+elseif opt.array ~= '' then
+   -- get network definition
+   model = assert(require(opt.array))
+   pf('Building %s model from array...\n', r..model.name..n)
+   net = model:mknet()
+   eye = model.eye
+else
+   -- get table definition
+   model = assert(require(opt.table))
+   pf('Building %s model from table...\n', r..model.name..n)
+   net, eye = build:cpu(model)
+   pf('\n')
+end
+
 eye = eye or 100
+if opt.eye ~= 0 then
+   eye = opt.eye
+end
 img = torch.FloatTensor(model.channel, eye, eye)
 
 if opt.save == 'a' then
