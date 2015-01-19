@@ -14,6 +14,7 @@ local THIS = sys.COLORS.blue .. 'THIS' .. n
 local opt = lapp [[
  -t, --table   (default ./tables/Kriz.lua) Network to profile
 
+ -e, --eye  (default 0)    Network eye
  -i, --iter (default 10)   Averaging iterations
  -s, --save (default -)    Save the float model to file as <model.net.ascii> in
                            [a]scii or as <model.net> in [b]inary format (a|b)
@@ -28,6 +29,9 @@ pf('Building %s model...\n', r..model.name..n)
 net, eye = build:cpu(model)
 pf('\n')
 eye = eye or 100
+if opt.eye ~= 0 then
+   eye = opt.eye
+end
 img = torch.FloatTensor(model.channel, eye, eye)
 
 if opt.save == 'a' then
