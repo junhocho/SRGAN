@@ -13,6 +13,7 @@ local THIS = sys.COLORS.blue .. 'THIS' .. n
 
 local opt = lapp [[
  -t, --table   (default ./tables/Kriz.lua) Network to profile
+ -n, --net     (default '')   Network to profile
 
  -e, --eye  (default 0)    Network eye
  -i, --iter (default 10)   Averaging iterations
@@ -22,12 +23,21 @@ local opt = lapp [[
 torch.setdefaulttensortype('torch.FloatTensor')
 
 
--- get model definition
-model = require(opt.table)
 
-pf('Building %s model...\n', r..model.name..n)
-net, eye = build:cpu(model)
-pf('\n')
+if opt.net ~= '' then
+   -- get network definition
+   model = assert(require(opt.net))
+   pf('Building %s model from network...\n', r..model.name..n)
+   net = model:mknet()
+   eye = model.eye
+else
+   -- get table definition
+   model = assert(require(opt.table))
+   pf('Building %s model from table...\n', r..model.name..n)
+   net, eye = build:cpu(model)
+   pf('\n')
+end
+
 eye = eye or 100
 if opt.eye ~= 0 then
    eye = opt.eye
