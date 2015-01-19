@@ -14,6 +14,7 @@ local THIS = sys.COLORS.blue .. 'THIS' .. n
 local opt = lapp [[
  -t, --table   (default ./tables/Kriz.lua) Network to profile
  -n, --net     (default '')   Network to profile
+ -a, --array   (default '')   Network to profile
 
  -e, --eye  (default 0)    Network eye
  -i, --iter (default 10)   Averaging iterations
@@ -28,6 +29,12 @@ if opt.net ~= '' then
    -- get network definition
    model = assert(require(opt.net))
    pf('Building %s model from network...\n', r..model.name..n)
+   net = model:mknet()
+   eye = model.eye
+elseif opt.array ~= '' then
+   -- get network definition
+   model = assert(require(opt.array))
+   pf('Building %s model from array...\n', r..model.name..n)
    net = model:mknet()
    eye = model.eye
 else
