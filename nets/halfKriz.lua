@@ -5,8 +5,7 @@ return {
    mknet = function(self)
       local net = nn.Sequential()
 
-      net:add(nn.SpatialZeroPadding(4, 4, 4, 4))
-      net:add(nn.SpatialConvolution(3,  48 , 11, 11 , 4, 4))
+      net:add(nn.SpatialConvolutionMM(3,  48 , 11, 11 , 4, 4 , 4))
       net:add(nn.ReLU())
       net:add(nn.SpatialConvolutionMM(48,  128 , 5, 5 , 1, 1 , 4))
       net:add(nn.SpatialMaxPooling(2, 2, 2, 2))
