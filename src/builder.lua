@@ -33,40 +33,19 @@ local function generate_conv(layer, net, input)
    end
    local conv_s = layer.conv.s or 1
 
-   if (conv_s == 1) then
-      print('net:add(nn.SpatialConvolutionMM('
-         ..input..',  '..output..' , '
-         ..conv_k..', '..conv_k..' , '
-         ..conv_s..', '..conv_s..' , '
-         ..conv_p..'))')
+   print('net:add(nn.SpatialConvolutionMM('
+      ..input..',  '..output..' , '
+      ..conv_k..', '..conv_k..' , '
+      ..conv_s..', '..conv_s..' , '
+      ..conv_p..'))')
 
-      net:add( nn.SpatialConvolutionMM
-         ( input,  output
-         , conv_k, conv_k
-         , conv_s, conv_s
-         , conv_p
-         )
+   net:add( nn.SpatialConvolutionMM
+      ( input,  output
+      , conv_k, conv_k
+      , conv_s, conv_s
+      , conv_p
       )
-   else
-      if (conv_p > 0) then
-         print('net:add(nn.SpatialZeroPadding('
-            ..conv_p..', '..conv_p..', '..conv_p..', '..conv_p..'))')
-
-         net:add(nn.SpatialZeroPadding( conv_p, conv_p, conv_p, conv_p ))
-      end
-
-      print('net:add(nn.SpatialConvolution('
-         ..input..',  '..output..' , '
-         ..conv_k..', '..conv_k..' , '
-         ..conv_s..', '..conv_s..'))')
-
-      net:add( nn.SpatialConvolution
-         ( input,  output
-         , conv_k, conv_k
-         , conv_s, conv_s
-         )
-      )
-   end
+   )
 
    -- save eye calculation operation
    table.insert(eye_ops, {
