@@ -139,6 +139,32 @@ function profiler:ops(net, img)
    return self:calc_ops(def, channel, map)
 end
 
+local function calc_time_cuda(net, img, iterations)
+   assert(require("cunn"))
+
+   local tmp = false
+   local timer = torch.Timer()
+   local timing = torch.FloatTensor(iterations)
+   local t = 0
+   net:cuda()
+   img = img:cuda()
+
+   -- iterations plus one to prime the jit
+   for i=1, (iterations+1) do
+      xlua.progress(i, iterations)
+
+      timer:reset()
+
+      tmp = net:forward(img)
+      cutorch.synchronize()
+      tmp:float()
+
+      t = timer:time().real
+      timing[(i%iterations)+1] = t
+   end
+
+   return timing:mean(), tmp
+end
 
 local function calc_time_cpu(net, img, iterations)
    local tmp = false
@@ -161,11 +187,15 @@ local function calc_time_cpu(net, img, iterations)
    return timing:mean(), tmp
 end
 
-function profiler:time(net, img, iterations)
+function profiler:time(net, img, iterations, cuda)
    iterations = iterations or 10
    local time = { total = 0, conv = 0, mlp = 0, }
 
-   if 2 ~= #net['modules'] then
+   if cuda then
+
+      time.total = calc_time_cuda(net, img, iterations)
+
+   elseif 2 ~= #net['modules'] then
 
       time.total = calc_time_cpu(net, img, iterations)
 
