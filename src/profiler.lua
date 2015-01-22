@@ -147,7 +147,6 @@ local function calc_time_cuda(net, img, iterations)
    local timing = torch.FloatTensor(iterations)
    local t = 0
    net:cuda()
-   img = img:cuda()
 
    -- iterations plus one to prime the jit
    for i=1, (iterations+1) do
@@ -155,7 +154,8 @@ local function calc_time_cuda(net, img, iterations)
 
       timer:reset()
 
-      tmp = net:forward(img)
+      local img_cuda = img:cuda()
+      tmp = net:forward(img_cuda)
       cutorch.synchronize()
       tmp:float()
 
