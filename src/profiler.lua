@@ -139,6 +139,32 @@ function profiler:ops(net, img)
    return self:calc_ops(def, channel, map)
 end
 
+local function calc_time_nnx(net, img, iterations)
+   package.path = os.getenv('HOME').."/nnx-parser/src/?.lua;" .. package.path
+   local nn_X = assert(require 'nn_X')
+
+   -- parse network for nnx
+   local dst, src = nn_X:compile(net, img:type(), img:size())
+
+   local timer = torch.Timer()
+   local timing = torch.FloatTensor(iterations)
+   local t = 0
+
+   -- iterations plus one to prime the jit
+   for i=1, (iterations+1) do
+      xlua.progress(i, iterations)
+
+      timer:reset()
+
+      nn_X:forward(img)
+
+      t = timer:time().real
+      timing[(i%iterations)+1] = t
+   end
+
+   return timing:mean(), tmp
+end
+
 local function calc_time_cuda(net, img, iterations)
    assert(require("cunn"))
 
@@ -187,13 +213,17 @@ local function calc_time_cpu(net, img, iterations)
    return timing:mean(), tmp
 end
 
-function profiler:time(net, img, iterations, cuda)
+function profiler:time(net, img, iterations, platform)
    iterations = iterations or 10
    local time = { total = 0, conv = 0, mlp = 0, }
 
-   if cuda then
+   if 'cuda' == platform then
 
       time.total = calc_time_cuda(net, img, iterations)
+
+   elseif 'nnx' == platform then
+
+      time.total = calc_time_nnx(net, img, iterations)
 
    elseif 2 ~= #net['modules'] then
 

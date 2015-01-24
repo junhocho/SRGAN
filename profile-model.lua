@@ -16,11 +16,11 @@ local opt = lapp [[
  -n, --net     (default '')   Network to profile
  -a, --array   (default '')   Network to profile
 
- -c, --cuda                Cuda option, default false
- -e, --eye  (default 0)    Network eye
- -i, --iter (default 10)   Averaging iterations
- -s, --save (default -)    Save the float model to file as <model.net.ascii> in
-                           [a]scii or as <model.net> in [b]inary format (a|b)
+ -p, --platform   (default cpu)  Select profiling platform (cpu|cuda|nnx)
+ -e, --eye        (default 0)    Network eye
+ -i, --iter       (default 10)   Averaging iterations
+ -s, --save       (default -)    Save the float model to file as <model.net.ascii>in
+                                 [a]scii or as <model.net> in [b]inary format (a|b)
 ]]
 torch.setdefaulttensortype('torch.FloatTensor')
 
@@ -77,7 +77,7 @@ pf('    + Conv/Pool/MLP: %.2fG/%.2fk/%.2fM(-Ops)\n',
 
 -- time and average over a number of iterations
 pf('Profiling %s, %d iterations', r..model.name..n, opt.iter)
-time = profile:time(net, img, opt.iter, opt.cuda)
+time = profile:time(net, img, opt.iter, opt.platform)
 
 local d = (opt.cuda and  g..'GPU'..n or g..'CPU'..n)
 pf('   Forward average time on %s %s: %.2f ms', THIS, d, time.total * 1e3)
