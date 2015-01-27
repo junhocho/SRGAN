@@ -79,7 +79,13 @@ pf('    + Conv/Pool/MLP: %.2fG/%.2fk/%.2fM(-Ops)\n',
 pf('Profiling %s, %d iterations', r..model.name..n, opt.iter)
 time = profile:time(net, img, opt.iter, opt.platform)
 
-local d = (opt.cuda and  g..'GPU'..n or g..'CPU'..n)
+local d = g..'CPU'..n
+if 'cuda' == opt.platform then
+   d = g..'GPU'..n
+elseif 'nnx' == opt.platform then
+   d = g..'nnX'..n
+end
+
 pf('   Forward average time on %s %s: %.2f ms', THIS, d, time.total * 1e3)
 if (time.conv ~= 0) and (time.mlp ~= 0) then
    pf('    + Convolution time: %.2f ms', time.conv * 1e3)
