@@ -64,7 +64,13 @@ end
 
 
 -- calculate the number of operations performed by the network
-ops = profile:ops(net, img)
+if (opt.table ~= '') and (opt.platform == 'nnx') then
+   ops = profile:calc_ops(model.def, model.channel, {
+      width  = img:size(3), height = img:size(2),
+   })
+else
+   ops = profile:ops(net, img)
+end
 ops_total = ops.conv + ops.pool + ops.mlp
 
 pf('   Total number of neurons: %d', ops.neurons)
