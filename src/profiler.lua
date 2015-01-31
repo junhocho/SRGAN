@@ -162,6 +162,14 @@ local function calc_time_nnx(net, img, iterations)
       timing[(i%iterations)+1] = t
    end
 
+   local scale = timing:mean()*1024*1024
+   local bandwidth_total = BANDWIDTH.src+BANDWIDTH.dst
+   print(string.format('   Bandwidth to memory   [MByte/sec]: %d', BANDWIDTH.dst/scale))
+   print(string.format('   Bandwidth from memory [MByte/sec]: %d', BANDWIDTH.src/scale))
+   print(string.format('   Bandwidth total       [MByte/sec]: %d', bandwidth_total/scale))
+
+   nn_X:close()
+
    return timing:mean(), tmp
 end
 
