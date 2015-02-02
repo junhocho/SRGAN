@@ -12,7 +12,7 @@ local n = sys.COLORS.none
 local THIS = sys.COLORS.blue .. 'THIS' .. n
 
 local opt = lapp [[
- -t, --table   (default ./tables/Kriz.lua) Network to profile
+ -t, --table   (default '')   Network to profile
  -n, --net     (default '')   Network to profile
  -a, --array   (default '')   Network to profile
 
@@ -38,12 +38,14 @@ elseif opt.array ~= '' then
    pf('Building %s model from array...\n', r..model.name..n)
    net = model:mknet()
    eye = model.eye
-else
+elseif opt.table ~= '' then
    -- get table definition
    model = assert(require(opt.table))
    pf('Building %s model from table...\n', r..model.name..n)
    net, eye = build:cpu(model)
    pf('\n')
+else
+   error('Network definition not specified')
 end
 
 eye = eye or 100
