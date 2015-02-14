@@ -27,13 +27,13 @@ torch.setdefaulttensortype('torch.FloatTensor')
 
 if opt.net ~= '' then
    -- get network definition
-   model = assert(require(opt.net))
+   model = assert(require('./'..opt.net))
    pf('Building %s model from network...\n', r..model.name..n)
    net = model:mknet()
    eye = model.eye
 elseif opt.table ~= '' then
    -- get table definition
-   model = assert(require(opt.table))
+   model = assert(require('./'..opt.table))
    pf('Building %s model from table...\n', r..model.name..n)
    net, eye = build:cpu(model)
    pf('\n')
