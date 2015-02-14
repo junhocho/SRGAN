@@ -112,6 +112,23 @@ local process_node = {
       img = node:forward(img)
       return img, sequence, layer
    end,
+   ['nn.View'] = function(node, img, sequence, layer)
+      assert(img:dim() == 3, 'view input should have 3 dimensions')
+      assert(img:size(2) == img:size(3), 'view input maps should be square')
+      if next(layer) ~= nil then
+         -- add pending layer to sequence
+         table.insert(sequence, layer)
+         layer = {}
+      end
+
+      layer.transform = {
+         name = 'View',
+         size = img:size(2),
+      }
+
+      img = node:forward(img)
+      return img, sequence, layer
+   end,
    ['nn.Linear'] = function(node, img, sequence, layer)
       if next(layer) ~= nil then
          -- add pending layer to sequence

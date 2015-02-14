@@ -87,6 +87,9 @@ local function calc_transform(layer, input)
    if 'Reshape' == transform.name then
       -- calculate new output after reshape
       output = (transform.size * transform.size * input)
+   elseif 'View' == transform.name then
+      -- calculate new output after reshape
+      output = (transform.size * transform.size * input)
    else
       error('do not know this transform module', transform.name)
    end
