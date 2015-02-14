@@ -11,8 +11,8 @@ local n = sys.COLORS.none
 local THIS = sys.COLORS.blue .. 'THIS' .. n
 
 local opt = lapp [[
- -t, --table   (default '')   Network to profile
- -n, --net     (default '')   Network to profile
+ -m, --model   (default '')   Empty Network model to profile
+ -n, --net     (default '')   Trained Network to profile
 
  -p, --platform   (default cpu)  Select profiling platform (cpu|cuda|nnx)
  -e, --eye        (default 0)    Network eye
@@ -26,14 +26,10 @@ torch.setdefaulttensortype('torch.FloatTensor')
 
 if opt.net ~= '' then
    -- get network definition
-   model = assert(require('./'..opt.net))
-   pf('Building %s model from network...\n', r..model.name..n)
-   net = model:mknet()
-   eye = model.eye
-elseif opt.table ~= '' then
+elseif opt.model ~= '' then
    -- get table definition
-   model = assert(require('./'..opt.table))
-   pf('Building %s model from table...\n', r..model.name..n)
+   model = assert(require('./'..opt.model))
+   pf('Building %s model from model...\n', r..model.name..n)
    net = model:mknet()
    eye = model.eye
 else
@@ -58,7 +54,7 @@ end
 
 
 -- calculate the number of operations performed by the network
-if (opt.table ~= '') and (opt.platform == 'nnx') then
+if model.def and (opt.platform == 'nnx') then
    ops = profile:calc_ops(model.def, model.channel, {
       width  = img:size(3), height = img:size(2),
    })
