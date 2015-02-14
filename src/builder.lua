@@ -182,6 +182,7 @@ function builder:cpu(model)
       eye = eye_calc(#eye_ops, eye_output)
    end
 
+   print('\n')
    return net, eye
 end
 
