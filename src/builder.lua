@@ -87,11 +87,14 @@ local function generate_conv(layer, net, input)
       elseif 'Threshold' == layer.nlmp then
          print('net:add(nn.Threshold())')
          net:add(nn.Threshold())
+      elseif 'SoftMax' == layer.nlmp then
+         print('net:add(nn.SoftMax())')
+         net:add(nn.SoftMax())
       elseif 'LogSoftMax' == layer.nlmp then
          print('net:add(nn.LogSoftMax())')
          net:add(nn.LogSoftMax())
       else
-         error('do not know this non-linear mapper module', layer.nlmp)
+         error('do not know this non-linear mapper module '..layer.nlmp)
       end
    end
 
@@ -110,11 +113,14 @@ local function generate_linear(layer, net, input)
       elseif 'Threshold' == layer.nlmp then
          print('net:add(nn.Threshold())')
          net:add(nn.Threshold())
+      elseif 'SoftMax' == layer.nlmp then
+         print('net:add(nn.SoftMax())')
+         net:add(nn.SoftMax())
       elseif 'LogSoftMax' == layer.nlmp then
          print('net:add(nn.LogSoftMax())')
          net:add(nn.LogSoftMax())
       else
-         error('do not know this non-linear mapper module', layer.nlmp)
+         error('do not know this non-linear mapper module '..layer.nlmp)
       end
    end
 
@@ -133,7 +139,7 @@ local function generate_transform(layer, net, input)
       -- save transform size for eye calculation
       eye_output = transform.size
    else
-      error('do not know this transform module', transform.name)
+      error('do not know this transform module '..transform.name)
    end
 
    return net, output
@@ -182,6 +188,7 @@ function builder:cpu(model)
       eye = eye_calc(#eye_ops, eye_output)
    end
 
+   print('\n')
    return net, eye
 end
 

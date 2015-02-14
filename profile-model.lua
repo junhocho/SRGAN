@@ -2,7 +2,6 @@ require 'nn'
 require 'xlua'
 require 'sys'
 local lapp = assert(require('pl.lapp'))
-local build = assert(require('src/builder'))
 local profile = assert(require('src/profiler'))
 
 local pf = function(...) print(string.format(...)) end
@@ -12,11 +11,11 @@ local n = sys.COLORS.none
 local THIS = sys.COLORS.blue .. 'THIS' .. n
 
 local opt = lapp [[
- -t, --table   (default '')   Network to profile
- -n, --net     (default '')   Network to profile
- -a, --array   (default '')   Network to profile
+ -m, --model   (default '')   Empty Network model to profile
+ -n, --net     (default '')   Trained Network to profile
 
  -p, --platform   (default cpu)  Select profiling platform (cpu|cuda|nnx)
+ -c, --channel    (default 0)    Input image channel number
  -e, --eye        (default 0)    Network eye
  -i, --iter       (default 10)   Averaging iterations
  -s, --save       (default -)    Save the float model to file as <model.net.ascii>in
@@ -27,25 +26,29 @@ torch.setdefaulttensortype('torch.FloatTensor')
 
 
 if opt.net ~= '' then
-   -- get network definition
-   model = assert(require(opt.net))
-   pf('Building %s model from network...\n', r..model.name..n)
+   model = { channel = 3, name = 'Trained Network' }
+
+   -- load network
+   if string.find(opt.net, '.net.ascii', #opt.net-10) then
+      net = torch.load(opt.net, 'ascii')
+   elseif string.find(opt.net, '.net', #opt.net-4) then
+      net = torch.load(opt.net, 'binary')
+   else
+      error('Network named not recognized')
+   end
+elseif opt.model ~= '' then
+   -- get model definition
+   model = assert(require('./'..opt.model))
+   pf('Building %s model from model...\n', r..model.name..n)
    net = model:mknet()
    eye = model.eye
-elseif opt.array ~= '' then
-   -- get network definition
-   model = assert(require(opt.array))
-   pf('Building %s model from array...\n', r..model.name..n)
-   net = model:mknet()
-   eye = model.eye
-elseif opt.table ~= '' then
-   -- get table definition
-   model = assert(require(opt.table))
-   pf('Building %s model from table...\n', r..model.name..n)
-   net, eye = build:cpu(model)
-   pf('\n')
 else
    error('Network definition not specified')
+end
+
+
+if opt.channel ~= 0 then
+   model.channel = opt.channel
 end
 
 eye = eye or 100
@@ -66,7 +69,7 @@ end
 
 
 -- calculate the number of operations performed by the network
-if (opt.table ~= '') and (opt.platform == 'nnx') then
+if model.def and (opt.platform == 'nnx') then
    ops = profile:calc_ops(model.def, model.channel, {
       width  = img:size(3), height = img:size(2),
    })

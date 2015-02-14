@@ -71,6 +71,14 @@ local process_node = {
       img = node:forward(img)
       return img, sequence, layer
    end,
+   ['nn.SoftMax'] = function(node, img, sequence, layer)
+      assert(not layer.nlmp, "shouldn't have two non-linears in same layer")
+
+      layer.nlmp = 'SoftMax'
+
+      img = node:forward(img)
+      return img, sequence, layer
+   end,
    ['nn.LogSoftMax'] = function(node, img, sequence, layer)
       assert(not layer.nlmp, "shouldn't have two non-linears in same layer")
 
@@ -106,6 +114,23 @@ local process_node = {
 
       layer.transform = {
          name = 'Reshape',
+         size = img:size(2),
+      }
+
+      img = node:forward(img)
+      return img, sequence, layer
+   end,
+   ['nn.View'] = function(node, img, sequence, layer)
+      assert(img:dim() == 3, 'view input should have 3 dimensions')
+      assert(img:size(2) == img:size(3), 'view input maps should be square')
+      if next(layer) ~= nil then
+         -- add pending layer to sequence
+         table.insert(sequence, layer)
+         layer = {}
+      end
+
+      layer.transform = {
+         name = 'View',
          size = img:size(2),
       }
 
@@ -158,7 +183,7 @@ function parser:network(net, img, pos, sequence, layer)
    if process_fun then
       img, sequence, layer = process_fun(node, img, sequence, layer)
    else
-      print('WARNING network module ignored:', node_name)
+      print('WARNING <parser> network module ignored:', node_name)
    end
 
    if node_last then

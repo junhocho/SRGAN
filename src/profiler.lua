@@ -23,9 +23,10 @@ local function calc_conv(layer, input, map, ops)
    if layer.nlmp then
       if not ( ('ReLU' == layer.nlmp)
             or ('Threshold' == layer.nlmp)
+            or ('SoftMax' == layer.nlmp)
             or ('LogSoftMax' == layer.nlmp)) then
 
-         error('do not know this non-linear mapper module', layer.nlmp)
+         error('do not know this non-linear mapper module '..layer.nlmp)
       else
          local ops_nlmp = output * output_map
          ops.conv = ops.conv + ops_nlmp
@@ -65,9 +66,10 @@ local function calc_linear(layer, input, ops)
    if layer.nlmp then
       if not ( ('ReLU' == layer.nlmp)
             or ('Threshold' == layer.nlmp)
+            or ('SoftMax' == layer.nlmp)
             or ('LogSoftMax' == layer.nlmp)) then
 
-         error('do not know this non-linear mapper module', layer.nlmp)
+         error('do not know this non-linear mapper module '..layer.nlmp)
       else
          local ops_nlmp = output
          ops.mlp = ops.mlp + ops_nlmp
@@ -87,8 +89,11 @@ local function calc_transform(layer, input)
    if 'Reshape' == transform.name then
       -- calculate new output after reshape
       output = (transform.size * transform.size * input)
+   elseif 'View' == transform.name then
+      -- calculate new output after reshape
+      output = (transform.size * transform.size * input)
    else
-      error('do not know this transform module', transform.name)
+      error('do not know this transform module '..transform.name)
    end
 
    return output
