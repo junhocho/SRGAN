@@ -11,9 +11,7 @@ local n = sys.COLORS.none
 local THIS = sys.COLORS.blue .. 'THIS' .. n
 
 local opt = lapp [[
- -m, --model   (default '')   Empty Network model to profile
- -n, --net     (default '')   Trained Network to profile
-
+ -m, --model      (default '')   Network model to profile
  -p, --platform   (default cpu)  Select profiling platform (cpu|cuda|nnx)
  -c, --channel    (default 0)    Input image channel number
  -e, --eye        (default 0)    Network eye
@@ -24,26 +22,21 @@ local opt = lapp [[
 torch.setdefaulttensortype('torch.FloatTensor')
 
 
-
-if opt.net ~= '' then
-   model = { channel = 3, name = 'Trained Network' }
-
-   -- load network
-   if string.find(opt.net, '.net.ascii', #opt.net-10) then
-      net = torch.load(opt.net, 'ascii')
-   elseif string.find(opt.net, '.net', #opt.net-4) then
-      net = torch.load(opt.net, 'binary')
-   else
-      error('Network named not recognized')
-   end
-elseif opt.model ~= '' then
-   -- get model definition
+if string.find(opt.model, '.lua', #opt.model-4) then
    model = assert(require('./'..opt.model))
    pf('Building %s model from model...\n', r..model.name..n)
    net = model:mknet()
    eye = model.eye
+elseif string.find(opt.model, '.net', #opt.model-4) then
+   model = { channel = 3, name = 'Trained binary network' }
+   pf('Loading %s model from binary file...\n', r..model.name..n)
+   net = torch.load(opt.model, 'binary')
+elseif string.find(opt.model, '.net.ascii', #opt.model-10) then
+   model = { channel = 3, name = 'Trained ascii network' }
+   pf('Loading %s model from ascii file...\n', r..model.name..n)
+   net = torch.load(opt.model, 'ascii')
 else
-   error('Network definition not specified')
+   error('Network named not recognized')
 end
 
 
@@ -56,6 +49,7 @@ if opt.eye ~= 0 then
    eye = opt.eye
 end
 img = torch.FloatTensor(model.channel, eye, eye)
+
 
 if opt.save == 'a' then
    pf('Saving model as model.net.ascii... ')
