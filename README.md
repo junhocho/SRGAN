@@ -7,29 +7,31 @@ operation profiling.
 ## Running the application
 
 The application can profile both a written definition of a network or an
-already trained network (saved as ether 'ascii' or 'binary').
+already trained network (saved as ether 'ascii' or 'binary'). Pass in the
+location of the model using the '-m' or its long equivalent '--model'.
 
 To profile the written definition of the model it must be defined in a specially
-formatted table, examples of which can be found in the 'models' directory.
-Select the model definition using the '-m' or its long equivalent '--model'.
+formatted table saved to a file with the '.lua' extension. Examples of which
+can be found in the 'models' directory.
 
 ```
 th profile-model.lua --model <'model name'>
 ```
 
-To profile the already trained network, pass in the file name of the network
-using the '-n' or its long equivalent '--net'. In most cases you will also need
-to pass in the network 'eye' value. If the network has standard extensions the
-application will auto detect if the network is saved as ether a 'ascii' or
-'binary' network and load appropriately.
+To profile the already trained network, pass in the file name by again using
+the '-m' flag. If the network file has standard extensions the application
+will auto detect if the network is saved as ether an 'ascii' or 'binary'
+network and load appropriately. In most cases you will also need to pass in
+the network 'eye' value and in some rare case the input channel number.
+
 
 ```
 th profile-model.lua --net <'model name'> --eye <eye number value>
 ```
 
 Profiling the network speed on different platforms is also possible. Currently
-the default platform is 'cpu' but if available the profiler can be targeted
-running the networks using 'cuda' or the 'nnx' hardware.
+the default platform is 'cpu' but if available the profiler can be targeted to
+run the networks using 'cuda' or the 'nnx' hardware.
 
 
 ```
