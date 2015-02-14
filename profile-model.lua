@@ -15,6 +15,7 @@ local opt = lapp [[
  -n, --net     (default '')   Trained Network to profile
 
  -p, --platform   (default cpu)  Select profiling platform (cpu|cuda|nnx)
+ -c, --channel    (default 0)    Input image channel number
  -e, --eye        (default 0)    Network eye
  -i, --iter       (default 10)   Averaging iterations
  -s, --save       (default -)    Save the float model to file as <model.net.ascii>in
@@ -34,6 +35,11 @@ elseif opt.model ~= '' then
    eye = model.eye
 else
    error('Network definition not specified')
+end
+
+
+if opt.channel ~= 0 then
+   model.channel = opt.channel
 end
 
 eye = eye or 100
