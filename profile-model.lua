@@ -26,9 +26,18 @@ torch.setdefaulttensortype('torch.FloatTensor')
 
 
 if opt.net ~= '' then
-   -- get network definition
+   model = { channel = 3, name = 'Trained Network' }
+
+   -- load network
+   if string.find(opt.net, '.net.ascii', #opt.net-10) then
+      net = torch.load(opt.net, 'ascii')
+   elseif string.find(opt.net, '.net', #opt.net-4) then
+      net = torch.load(opt.net, 'binary')
+   else
+      error('Network named not recognized')
+   end
 elseif opt.model ~= '' then
-   -- get table definition
+   -- get model definition
    model = assert(require('./'..opt.model))
    pf('Building %s model from model...\n', r..model.name..n)
    net = model:mknet()
