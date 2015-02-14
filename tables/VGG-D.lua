@@ -103,4 +103,11 @@ return {
          },
       },
    },
+   mknet = function(self)
+      local build = assert(require('src/builder'))
+      local net, eye = build:cpu(self)
+      self.eye = eye
+
+      return net
+   end
 }

@@ -2,7 +2,6 @@ require 'nn'
 require 'xlua'
 require 'sys'
 local lapp = assert(require('pl.lapp'))
-local build = assert(require('src/builder'))
 local profile = assert(require('src/profiler'))
 
 local pf = function(...) print(string.format(...)) end
@@ -35,8 +34,8 @@ elseif opt.table ~= '' then
    -- get table definition
    model = assert(require('./'..opt.table))
    pf('Building %s model from table...\n', r..model.name..n)
-   net, eye = build:cpu(model)
-   pf('\n')
+   net = model:mknet()
+   eye = model.eye
 else
    error('Network definition not specified')
 end
