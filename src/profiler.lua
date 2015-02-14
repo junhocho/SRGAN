@@ -23,6 +23,7 @@ local function calc_conv(layer, input, map, ops)
    if layer.nlmp then
       if not ( ('ReLU' == layer.nlmp)
             or ('Threshold' == layer.nlmp)
+            or ('SoftMax' == layer.nlmp)
             or ('LogSoftMax' == layer.nlmp)) then
 
          error('do not know this non-linear mapper module '..layer.nlmp)
@@ -65,6 +66,7 @@ local function calc_linear(layer, input, ops)
    if layer.nlmp then
       if not ( ('ReLU' == layer.nlmp)
             or ('Threshold' == layer.nlmp)
+            or ('SoftMax' == layer.nlmp)
             or ('LogSoftMax' == layer.nlmp)) then
 
          error('do not know this non-linear mapper module '..layer.nlmp)

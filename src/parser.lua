@@ -71,6 +71,14 @@ local process_node = {
       img = node:forward(img)
       return img, sequence, layer
    end,
+   ['nn.SoftMax'] = function(node, img, sequence, layer)
+      assert(not layer.nlmp, "shouldn't have two non-linears in same layer")
+
+      layer.nlmp = 'SoftMax'
+
+      img = node:forward(img)
+      return img, sequence, layer
+   end,
    ['nn.LogSoftMax'] = function(node, img, sequence, layer)
       assert(not layer.nlmp, "shouldn't have two non-linears in same layer")
 
@@ -175,7 +183,7 @@ function parser:network(net, img, pos, sequence, layer)
    if process_fun then
       img, sequence, layer = process_fun(node, img, sequence, layer)
    else
-      print('WARNING network module ignored:', node_name)
+      print('WARNING <parser> network module ignored:', node_name)
    end
 
    if node_last then

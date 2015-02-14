@@ -87,6 +87,9 @@ local function generate_conv(layer, net, input)
       elseif 'Threshold' == layer.nlmp then
          print('net:add(nn.Threshold())')
          net:add(nn.Threshold())
+      elseif 'SoftMax' == layer.nlmp then
+         print('net:add(nn.SoftMax())')
+         net:add(nn.SoftMax())
       elseif 'LogSoftMax' == layer.nlmp then
          print('net:add(nn.LogSoftMax())')
          net:add(nn.LogSoftMax())
@@ -110,6 +113,9 @@ local function generate_linear(layer, net, input)
       elseif 'Threshold' == layer.nlmp then
          print('net:add(nn.Threshold())')
          net:add(nn.Threshold())
+      elseif 'SoftMax' == layer.nlmp then
+         print('net:add(nn.SoftMax())')
+         net:add(nn.SoftMax())
       elseif 'LogSoftMax' == layer.nlmp then
          print('net:add(nn.LogSoftMax())')
          net:add(nn.LogSoftMax())
