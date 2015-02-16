@@ -21,8 +21,8 @@ return {
       model:add(nn.ReLU())
 
       -- fully connected layer
-      model:add(nn.Reshape(256*3*3))
-      --model:add(nn.View(256*3*3))
+      --model:add(nn.Reshape(256*3*3))
+      model:add(nn.View(256*3*3))
       model:add(nn.Dropout(0.5))
       model:add(nn.Linear(256*3*3, 1024))
       model:add(nn.ReLU())
