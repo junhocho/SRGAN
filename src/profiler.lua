@@ -145,7 +145,6 @@ function profiler:ops(net, img)
 end
 
 local function calc_time_nnx(net, img, iterations)
-   package.path = os.getenv('HOME').."/nnx-parser/src/?.lua;" .. package.path
    local nn_X = assert(require 'nn_X')
 
    -- parse network for nnx
