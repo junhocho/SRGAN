@@ -11,7 +11,7 @@ local n = sys.COLORS.none
 local THIS = sys.COLORS.blue .. 'THIS' .. n
 
 local opt = lapp [[
- -m, --model      (default '')   Network model to profile
+ -m, --model      (default '')   Path & filename of network model to profile
  -p, --platform   (default cpu)  Select profiling platform (cpu|cuda|nnx)
  -c, --channel    (default 0)    Input image channel number
  -e, --eye        (default 0)    Network eye
