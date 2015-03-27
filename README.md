@@ -10,19 +10,19 @@ The application can profile both a written definition of a network or an already
 To profile the written definition of the model it must be defined in a specially formatted table saved to a file with the `.lua` extension. Examples of which can be found in the 'models' directory.
 
 ```
-th profile-model.lua --model <'model name'>
+th profile-model.lua --model <'path/filename.lua'>
 ```
 
-To profile the already trained network, pass in the file name by again using the `-m` flag. If the network file has standard extensions the application will auto detect if the network is saved as ether an `ascii` or `binary` network and load appropriately. In most cases you will also need to pass in the network `eye` value and in some rare case the input channel number.
+To profile the already trained network, pass in the path and file name by again using the `-m` flag. If the network file has standard extensions the application will auto detect if the network is saved as ether an `ascii` or `binary` network and load appropriately. In most cases you will also need to pass in the network `eye` value and in some rare case the input channel number.
 
 ```
-th profile-model.lua --net <'model name'> --eye <eye number value>
+th profile-model.lua --net <'path/filename.lua'> --eye <eye number value>
 ```
 
 Profiling the network speed on different platforms is also possible. Currently the default platform is `cpu` but if available the profiler can be targeted to run the networks using `cuda` or the `nnx` hardware.
 
 ```
-th profile-model.lua --model <'model name'> --platform <'cpu'|'cuda'|'nnx'>
+th profile-model.lua --model <'path/filename.lua'> --platform <'cpu'|'cuda'|'nnx'>
 ```
 
 
