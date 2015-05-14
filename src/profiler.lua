@@ -159,13 +159,22 @@ end
 local function calc_transform(layer, input)
    local transform = layer.transform
    local output = 0
+   local height = 0
+   local width = 0
+   if type(transform.size) == 'table' then
+      height = transform.size.height
+      width = transform.size.width
+   else
+      height = transform.size
+      width = transform.size
+   end
 
    if 'Reshape' == transform.name then
       -- calculate new output after reshape
-      output = (transform.size * transform.size * input)
+      output = (width * height * input)
    elseif 'View' == transform.name then
       -- calculate new output after reshape
-      output = (transform.size * transform.size * input)
+      output = (width * height * input)
    else
       error('do not know this transform module '..transform.name)
    end

@@ -105,7 +105,7 @@ local process_node = {
    end,
    ['nn.Reshape'] = function(node, img, sequence, layer)
       assert(img:dim() == 3, 'reshape input should have 3 dimensions')
-      assert(img:size(2) == img:size(3), 'reshape input maps should be square')
+      print('Reshape height:', img:size(2), 'width:', img:size(3))
       if next(layer) ~= nil then
          -- add pending layer to sequence
          table.insert(sequence, layer)
@@ -114,7 +114,10 @@ local process_node = {
 
       layer.transform = {
          name = 'Reshape',
-         size = img:size(2),
+         size = {
+            height   = img:size(2),
+            width    = img:size(3),
+         },
       }
 
       img = node:forward(img)
@@ -122,7 +125,7 @@ local process_node = {
    end,
    ['nn.View'] = function(node, img, sequence, layer)
       assert(img:dim() == 3, 'view input should have 3 dimensions')
-      assert(img:size(2) == img:size(3), 'view input maps should be square')
+      print('View height:', img:size(2), 'width:', img:size(3))
       if next(layer) ~= nil then
          -- add pending layer to sequence
          table.insert(sequence, layer)
@@ -131,7 +134,10 @@ local process_node = {
 
       layer.transform = {
          name = 'View',
-         size = img:size(2),
+         size = {
+            height   = img:size(2),
+            width    = img:size(3),
+         },
       }
 
       img = node:forward(img)
