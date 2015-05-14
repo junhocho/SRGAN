@@ -3,6 +3,7 @@ require 'xlua'
 require 'sys'
 local lapp = assert(require('pl.lapp'))
 local profile = assert(require('src/profiler'))
+local spatial = assert(require('src/spatial'))
 
 local pf = function(...) print(string.format(...)) end
 local r = sys.COLORS.red
@@ -15,6 +16,8 @@ local opt = lapp [[
  -p, --platform   (default cpu)  Select profiling platform (cpu|cuda|nnx)
  -c, --channel    (default 0)    Input image channel number
  -e, --eye        (default 0)    Network eye
+ -w, --width      (default 0)    Image width
+ -h, --height     (default 0)    Image height
  -i, --iter       (default 10)   Averaging iterations
  -s, --save       (default -)    Save the float model to file as <model.net.ascii>in
                                  [a]scii or as <model.net> in [b]inary format (a|b)
@@ -39,7 +42,6 @@ else
    error('Network named not recognized')
 end
 
-
 if opt.channel ~= 0 then
    model.channel = opt.channel
 end
@@ -48,7 +50,23 @@ eye = eye or 100
 if opt.eye ~= 0 then
    eye = opt.eye
 end
-img = torch.FloatTensor(model.channel, eye, eye)
+
+local width    = (opt.width ~= 0) and opt.width or eye
+local height   = (opt.height ~= 0) and opt.height or width
+
+img = torch.FloatTensor(model.channel, height, width)
+
+
+-- spatial net conversion
+if (width ~= eye) or (height ~= eye) then
+   if (opt.platform == 'nnx') then
+      print('Convert network to nn-X spatial')
+      net = spatial.net_spatial_mlp(net, torch.Tensor(model.channel, eye, eye))
+   else
+      print('Convert network to cpu spatial')
+      net = spatial.net_spatial(net, torch.Tensor(model.channel, eye, eye))
+   end
+end
 
 
 if opt.save == 'a' then
@@ -74,7 +92,7 @@ ops_total = ops.conv + ops.pool + ops.mlp
 
 pf('   Total number of neurons: %d', ops.neurons)
 pf('   Total number of trainable parameters: %d', net:getParameters():size(1))
-pf('   Operations estimation for square image side: %d', eye)
+pf('   Operations estimation for square image size: %d X %d', width, height)
 pf('    + Total: %.2f G-Ops', ops_total * 1e-9)
 pf('    + Conv/Pool/MLP: %.2fG/%.2fk/%.2fM(-Ops)\n',
    ops.conv * 1e-9, ops.pool * 1e-3, ops.mlp * 1e-6)
