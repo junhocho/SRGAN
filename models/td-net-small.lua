@@ -1,5 +1,5 @@
 return {
-   name = 'TeraDeep Net Small',
+   name = 'Net Small',
    channel = 3,
    eye = 231,
    mknet = function(self)
