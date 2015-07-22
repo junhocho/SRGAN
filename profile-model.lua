@@ -63,7 +63,7 @@ if (width ~= eye) or (height ~= eye) then
       print('Convert network to nn-X spatial')
       net = spatial.net_spatial_mlp(net, torch.Tensor(model.channel, eye, eye))
    else
-      print('Convert network to cpu spatial')
+      print('Convert network to spatial')
       net = spatial.net_spatial(net, torch.Tensor(model.channel, eye, eye))
    end
 end

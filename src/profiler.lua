@@ -267,8 +267,8 @@ local function calc_time_cuda(net, img, iterations)
       assert(require("cudnn"))
 
       net = convertCUDNN(net)
---      print('network has been converted to CUDNN:', net)
-
+      print('network has been converted to CUDNN:')
+      print(net)
       net = net:cuda()
 
       cutorch.setDevice(1)
