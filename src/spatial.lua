@@ -25,9 +25,6 @@ local function net_spatial(net, src, create, index)
    if module_name == 'nn.Linear' then
 
       local convolution_module = nn.SpatialConvolutionMM
-      if sys.execute('uname -a'):find('tegra') then
-         convolution_module = cudnn.SpatialConvolution
-      end
 
       if (#src:size() == 3) then
          tmp_module = convolution_module
@@ -48,10 +45,6 @@ local function net_spatial(net, src, create, index)
       tmp_module.weight:copy(module.weight):resize(tmp_module.weight:size())
       tmp_module.bias:copy(module.bias)
       create:add(tmp_module)
-      if sys.execute('uname -a'):find('tegra') then
-         src=src:cuda()
-         tmp_module:cuda()
-      end
       src = tmp_module:forward(src)
    elseif module_name == 'nn.Dropout' then
       -- do nothing
@@ -65,9 +58,6 @@ local function net_spatial(net, src, create, index)
       -- do nothing
    else
       create:add(module)
-      if sys.execute('uname -a'):find('tegra') then
-         src=src:cuda()
-      end
       src = module:forward(src)
    end
 
