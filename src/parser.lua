@@ -22,6 +22,8 @@ local process_node = {
    ['nn.SpatialConvolutionMM'] = function(node, img, sequence, layer)
       assert(node.kH == node.kW, 'conv kernel should be square')
       assert(node.dH == node.dW, 'conv stride should be equal')
+      assert(node.padH == node.padW, 'conv padding should be equal')
+
       if ((next(layer) ~= nil) and ((not layer.conv) or layer.conv.k)) then
          -- add pending layer to sequence
          table.insert(sequence, layer)
@@ -31,7 +33,7 @@ local process_node = {
       layer.conv = layer.conv or {}
       layer.conv.k = node.kH
       layer.conv.s = node.dH
-      layer.conv.p = layer.conv.p or node.padding
+      layer.conv.p = layer.conv.p or node.padW
       layer.output = node.nOutputPlane
 
       img = node:forward(img)
@@ -124,7 +126,7 @@ local process_node = {
       return img, sequence, layer
    end,
    ['nn.View'] = function(node, img, sequence, layer)
-      assert(img:dim() == 3, 'view input should have 3 dimensions')
+      assert(img:dim() == 3, 'view input should have 3 dimensions: '..img:dim())
       print('View height:', img:size(2), 'width:', img:size(3))
       if next(layer) ~= nil then
          -- add pending layer to sequence
