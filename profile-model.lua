@@ -5,6 +5,12 @@ local lapp = assert(require('pl.lapp'))
 local profile = assert(require('src/profiler'))
 local spatial = assert(require('src/spatial'))
 
+-- to load a 64-bit model in binary, we override torch.DiskFile if 32bit machine (ARM):
+local systembit = tonumber(io.popen("getconf LONG_BIT"):read('*a'))
+if systembit == 32 then
+   require('libbincompat')
+end
+
 local pf = function(...) print(string.format(...)) end
 local r = sys.COLORS.red
 local g = sys.COLORS.green
