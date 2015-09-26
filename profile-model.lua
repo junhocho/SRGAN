@@ -85,12 +85,9 @@ elseif opt.save == 'b' then
    pf('Done.\n')
 end
 
-
 -- calculate the number of operations performed by the network
-if model.def and (opt.platform == 'nnx') then
-   ops = profile:calc_ops(model.def, model.channel, {
-      width  = img:size(3), height = img:size(2),
-   })
+if opt.platform == 'nnx' then
+   ops = profile:ops(net, torch.FloatTensor(model.channel, eye, eye))
 else
    ops = profile:ops(net, img)
 end
@@ -98,7 +95,11 @@ ops_total = ops.conv + ops.pool + ops.mlp
 
 pf('   Total number of neurons: %d', ops.neurons)
 pf('   Total number of trainable parameters: %d', net:getParameters():size(1))
-pf('   Operations estimation for square image size: %d X %d', width, height)
+if ((width ~= eye) or (height ~= eye)) and (opt.platform == 'nnx') then
+   pf('   Operations estimation for image size: %d X %d', eye, eye)
+else
+   pf('   Operations estimation for image size: %d X %d', width, height)
+end
 pf('    + Total: %.2f G-Ops', ops_total * 1e-9)
 pf('    + Conv/Pool/MLP: %.2fG/%.2fk/%.2fM(-Ops)\n',
    ops.conv * 1e-9, ops.pool * 1e-3, ops.mlp * 1e-6)
