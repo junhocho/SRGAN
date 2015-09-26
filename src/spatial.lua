@@ -24,17 +24,15 @@ local function net_spatial(net, src, create, index)
 
    if module_name == 'nn.Linear' then
 
-      local convolution_module = nn.SpatialConvolutionMM
-
       if (#src:size() == 3) then
-         tmp_module = convolution_module
+         tmp_module = nn.SpatialConvolutionMM
             ( src:size(1)
             , module.weight:size(1)
             , src:size(2)
             , src:size(3)
             )
       else
-         tmp_module = convolution_module
+         tmp_module = nn.SpatialConvolutionMM
             ( module.weight[1]
             , module.weight[2]
             , 1
