@@ -10,6 +10,7 @@ return {
             nlmp = 'ReLU',
          },
          [2] = {
+            columns = 2,
             output = 256,
             conv = { k = 5, p = 2, },
             pool = { size = 3, stride = 2, },
@@ -21,11 +22,13 @@ return {
             nlmp = 'ReLU',
          },
          [4] = {
+            columns = 2,
             output = 384,
             conv = { k = 3, p = 1, },
             nlmp = 'ReLU',
          },
          [5] = {
+            columns = 2,
             output = 256,
             conv = { k = 3, p = 1, },
             pool = { size = 3, stride = 2, },
