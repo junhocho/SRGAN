@@ -1,3 +1,6 @@
+-- original model from 2012 paper:
+-- http://www.cs.toronto.edu/~fritz/absps/imagenet.pdf
+
 return {
    name = 'Krizhevsky',
    channel = 3,
