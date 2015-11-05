@@ -1,3 +1,6 @@
+-- model from:
+-- https://github.com/soumith/imagenet-multiGPU.torch/blob/master/models/alexnetowt_cudnn.lua
+
 return {
    name = 'Krizhevsky',
    channel = 3,
