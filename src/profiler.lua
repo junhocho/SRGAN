@@ -90,9 +90,20 @@ local function calc_conv(layer, input, map, ops)
    map.height = math.floor((map.height + (2 * p) - k + 1) / s)
    local output_map = map.width * map.height
    local ops_kernel = (2 * k^2) -- kernel + comb
-   local ops_bias = output * output_map
 
-   ops.conv = ops.conv + (input * output * output_map * ops_kernel + ops_bias)
+   if not layer.columns then
+      local ops_bias = output * output_map
+
+      ops.conv = ops.conv + (input * output * output_map * ops_kernel + ops_bias)
+   else
+      assert('number' == type(layer.columns))
+      local input = input / layer.columns
+      local output = output / layer.columns
+      local ops_bias = output * output_map
+      local ops_column = (input * output * output_map * ops_kernel + ops_bias)
+
+      ops.conv = ops.conv + (ops_column * layer.columns)
+   end
 
    if layer.nlmp then
       if not ( ('ReLU' == layer.nlmp)
