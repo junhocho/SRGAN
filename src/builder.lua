@@ -37,13 +37,13 @@ local function generate_conv(layer, net, input)
       ..input..',  '..output..' , '
       ..conv_k..', '..conv_k..' , '
       ..conv_s..', '..conv_s..' , '
-      ..conv_p..'))')
+      ..conv_p..', '..conv_p..'))')
 
-   net:add( nn.SpatialConvolutionMM (
-        input,  output
+   net:add( nn.SpatialConvolutionMM
+      ( input,  output
       , conv_k, conv_k
       , conv_s, conv_s
-      , conv_p
+      , conv_p, conv_p
       )
    )
 
