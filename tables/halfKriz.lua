@@ -26,7 +26,7 @@ return {
             nlmp = 'ReLU',
          },
          [5] = {
-            output = 256,
+            output = 128,
             conv = { k = 3, p = 2, },
             pool = { size = 3, stride = 2, },
             nlmp = 'ReLU',
