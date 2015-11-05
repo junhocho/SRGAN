@@ -6,18 +6,18 @@ return {
          [1] = {
             output = 48,
             conv = { k = 11, p = 4, s = 4, },
+            pool = { size = 3, stride = 2, },
             nlmp = 'ReLU',
          },
          [2] = {
             output = 128,
             conv = { k = 5, p = 4, },
-            pool = 2,
+            pool = { size = 3, stride = 2, },
             nlmp = 'ReLU',
          },
          [3] = {
             output = 192,
             conv = { k = 3, p = 2, },
-            pool = 2,
             nlmp = 'ReLU',
          },
          [4] = {
@@ -28,7 +28,7 @@ return {
          [5] = {
             output = 256,
             conv = { k = 3, p = 2, },
-            pool = 2,
+            pool = { size = 3, stride = 2, },
             nlmp = 'ReLU',
          },
       },
