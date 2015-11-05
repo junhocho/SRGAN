@@ -89,7 +89,15 @@ end
 if opt.platform == 'nnx' then
    ops = profile:ops(net, torch.FloatTensor(model.channel, eye, eye))
 else
-   ops = profile:ops(net, img)
+   if not model.def then
+      ops = profile:ops(net, img)
+   else
+      ops = profile:calc_ops
+         ( model.def
+         , model.channel
+         , { width  = img:size(3), height = img:size(2), }
+         )
+   end
 end
 ops_total = ops.conv + ops.pool + ops.mlp
 
