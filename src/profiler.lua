@@ -272,6 +272,7 @@ local function calc_time_nnx(net, img, iterations)
 end
 
 local function calc_time_cuda(net, img, iterations)
+   collectgarbage()
    if not sys.execute('uname -a'):find('tegra') then
       assert(require("cunn"))
    else
