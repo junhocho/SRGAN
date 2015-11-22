@@ -14,13 +14,13 @@ return {
       model:add(nn.SpatialConvolutionMM(64, 64, 3, 3, 1, 1))
       model:add(nn.SpatialMaxPooling(2,2,2,2))
       model:add(nn.ReLU())
-      model:add(nn.SpatialConvolutionMM(64, 32, 3, 3, 1, 1))
+      model:add(nn.SpatialConvolutionMM(64, 64, 3, 3, 1, 1))
       model:add(nn.ReLU())
 
       -- fully connected layer
-      model:add(nn.View(32))
+      model:add(nn.View(64))
       model:add(nn.Dropout(0.5))
-      model:add(nn.Linear(32, 128))
+      model:add(nn.Linear(64, 128))
       model:add(nn.ReLU())
       model:add(nn.Dropout(0.5))
       model:add(nn.Linear(128, 128))
