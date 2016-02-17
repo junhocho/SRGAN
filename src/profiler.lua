@@ -86,8 +86,8 @@ local function calc_conv(layer, input, map, ops)
    end
    local s = layer.conv.s or 1
 
-   map.width  = math.floor((map.width  + (2 * p) - k + 1) / s)
-   map.height = math.floor((map.height + (2 * p) - k + 1) / s)
+   map.width  = math.floor((map.width  + (2 * p) - k) / s) + 1
+   map.height = math.floor((map.height + (2 * p) - k) / s) + 1
    local output_map = map.width * map.height
    local ops_kernel = (2 * k^2) -- kernel + comb
 
