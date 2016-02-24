@@ -16,3 +16,9 @@ image size: 224 x 224
 
 ### nVidia GeForce GTX 980 (GPU2)
 2.99 ms
+
+### nVidia TX1 CPU
+114.66 ms
+
+### nVidia TX1 CPU
+25.73 ms
