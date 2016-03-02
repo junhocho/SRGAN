@@ -20,5 +20,5 @@ image size: 224 x 224
 ### nVidia TX1 CPU
 114.66 ms
 
-### nVidia TX1 CPU
+### nVidia TX1 GPU 32 bits
 25.73 ms
