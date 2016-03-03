@@ -22,3 +22,31 @@ image size: 224 x 224
 
 ### nVidia TX1 GPU 32 bits
 25.73 ms
+
+### nVidia TX1 CUDNN, float thnets:
+
+batch 32 0.216076
+
+batch 16 0.136664
+
+batch 8 0.093058
+
+batch 4 0.069320
+
+batch 2 0.057440
+
+batch 1 0.053675
+
+(batch > 32 gets worse)
+
+### nVidia TX1 CUDNN, half thnets:
+
+batch 1 0.027943
+
+(batch > 1 does not work for half, yet)
+
+### nVidia TX1 CPU thnets:
+
+batch 1 0.316170
+
+(batch > 1 is not better in performance)
