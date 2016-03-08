@@ -39,11 +39,23 @@ batch 1 0.053675
 
 (batch > 32 gets worse)
 
+
+
+
 ### nVidia TX1 CUDNN, half thnets:
+
+batch 32 0.593183
+
+batch 16 0.135197
+
+batch 8 0.070504
+
+batch 4 0.040225
+
+batch 2 0.032731
 
 batch 1 0.027943
 
-(batch > 1 does not work for half, yet)
 
 ### nVidia TX1 CPU thnets:
 
