@@ -30,8 +30,8 @@ All results are averaged over 100 runs unless otherwise mentioned
 
 |      Batch Size     |   1   |   2   |   4   |   8   |   16  |   32*  |
 |:-------------------:|:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|
-| Time (ms per batch) | 0.054 | 0.057 | 0.069 | 0.093 | 0.137 | 0.216 |
-| Time (ms per frame) | 0.054 | 0.028 | 0.017 | 0.012 | 0.008 | 0.007 |
+| Time (ms per batch) | 54 | 57 | 69 | 93 | 137 | 216 |
+| Time (ms per frame) | 54 | 28 | 17 | 12 | 8 | 7 |
 
 *batch > 32 gets worse
 
@@ -40,23 +40,23 @@ All results are averaged over 100 runs unless otherwise mentioned
 
 |      Batch Size     |   1   |   2   |   4  |   8   |   16  |   32  |
 |:-------------------:|:-----:|:-----:|:----:|:-----:|:-----:|:-----:|
-| Time (ms per batch) | 0.028 | 0.033 | 0.04 |  0.07 | 0.135 | 0.593 |
-| Time (ms per frame) | 0.028 | 0.016 | 0.01 | 0.009 | 0.008 | 0.018 |
+| Time (ms per batch) | 28 | 33 | 40 |  70 | 135 | 593 |
+| Time (ms per frame) | 28 | 16 | 10 | 9 | 8 | 18 |
 
 
 ### nVidia TX1 CPU thnets:
 
-batch 1 0.316170 ms
+batch 1 31.6170 ms
 
 (batch > 1 is not better in performance)
 
 
 ### nVidia TX1 nVidia TX1 thnets cudnn 4
 
-| Input Resolution | Perf. (ms) CPU FP32* | Perf. (ms) GPU FP32 | Perf. (ms) GPU FP16 |
-|:----------------:|:-------------------:|:-------------------:|:-------------------:|
-|   VGA (640x480)  |         1.27        |        0.094        |        0.058        |
-|  WXGA (1280x720) |         4.4         |         0.3         |        0.203        |
-|  FHD (1920x1080) |        11.23        |         0.67        |        0.434        |
+| Input Resolution | Perf. CPU FP32* (ms) | Perf. GPU FP32 (ms) | Perf. GPU FP16 (ms) |
+|:----------------:|:--------------------:|:-------------------:|:-------------------:|
+|   VGA (640x480)  |         1272        |        95        |        58         |
+|  WXGA (1280x720) |         4406        |         308      |        203        |
+|  FHD (1920x1080) |        11237        |         673      |        434        |
 
 *CPU results averaged over 10 runs
