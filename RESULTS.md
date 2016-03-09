@@ -3,7 +3,10 @@
 
 # AlexNet OWT 
 operations: 1.43 G
+
 image size: 224 x 224
+
+All results are averaged over 100 runs unless otherwise mentioned
 
 ### Macbook Pro 15in Late 2013 CPU intel i7
 31.90 ms
@@ -23,52 +26,35 @@ image size: 224 x 224
 ### nVidia TX1 GPU 32 bits
 25.73 ms
 
-### nVidia TX1 CUDNN 4, float thnets:
+### nVidia TX1 CUDNN 4, FP32 thnets:
 
-batch 32 0.216076
+|      Batch Size     |   1   |   2   |   4   |   8   |   16  |   32*  |
+|:-------------------:|:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|
+| Time (ms per batch) | 0.054 | 0.057 | 0.069 | 0.093 | 0.137 | 0.216 |
+| Time (ms per frame) | 0.054 | 0.028 | 0.017 | 0.012 | 0.008 | 0.007 |
 
-batch 16 0.136664
+*batch > 32 gets worse
 
-batch 8 0.093058
-
-batch 4 0.069320
-
-batch 2 0.057440
-
-batch 1 0.053675
-
-(batch > 32 gets worse)
+### nVidia TX1 CUDNN 4, FP16 thnets:
 
 
-
-
-### nVidia TX1 CUDNN, half thnets:
-
-batch 32 0.593183
-
-batch 16 0.135197
-
-batch 8 0.070504
-
-batch 4 0.040225
-
-batch 2 0.032731
-
-batch 1 0.027943
+|      Batch Size     |   1   |   2   |   4  |   8   |   16  |   32  |
+|:-------------------:|:-----:|:-----:|:----:|:-----:|:-----:|:-----:|
+| Time (ms per batch) | 0.028 | 0.033 | 0.04 |  0.07 | 0.135 | 0.593 |
+| Time (ms per frame) | 0.028 | 0.016 | 0.01 | 0.009 | 0.008 | 0.018 |
 
 
 ### nVidia TX1 CPU thnets:
 
-batch 1 0.316170
+batch 1 0.316170 ms
 
 (batch > 1 is not better in performance)
 
 
 ### nVidia TX1 nVidia TX1 thnets cudnn 4
 
-               CPU        float CUDA   half CUDA
-    640x480    1.27       0.094        0.058
-    1280x720   4.40       0.30         0.203
-    1920x1080  11.23      0.67         0.434
-
-For CPU it was run 10x instead of 100x.
+| Input Resolution | Perf. (ms) CPU FP32 | Perf. (ms) GPU FP32 | Perf. (ms) GPU FP16 |
+|:----------------:|:-------------------:|:-------------------:|:-------------------:|
+|   VGA (640x480)  |         1.27        |        0.094        |        0.058        |
+|  WXGA (1280x720) |         4.4         |         0.3         |        0.203        |
+|  FHD (1920x1080) |        11.23        |         0.67        |        0.434        |
