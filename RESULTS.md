@@ -66,9 +66,9 @@ batch 1 0.316170
 
 ### nVidia TX1 nVidia TX1 thnets cudnn 4
 
-              CPU      float CUDA      half CUDA
-640x480      1.272810    0.094859       0.058427
-1280x720     4.406745    0.308386       0.203298
-1920x1080   11.237424    0.672745       0.434481
+            CPU       float CUDA  half CUDA
+640x480     1.272810  0.094859    0.058427
+1280x720    4.406745  0.308386   0.203298
+1920x1080   11.237424 0.672745   0.434481
 
 For CPU it was run 10x instead of 100x.
