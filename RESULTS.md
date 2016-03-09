@@ -53,8 +53,10 @@ batch 1 0.316170 ms
 
 ### nVidia TX1 nVidia TX1 thnets cudnn 4
 
-| Input Resolution | Perf. (ms) CPU FP32 | Perf. (ms) GPU FP32 | Perf. (ms) GPU FP16 |
+| Input Resolution | Perf. (ms) CPU FP32* | Perf. (ms) GPU FP32 | Perf. (ms) GPU FP16 |
 |:----------------:|:-------------------:|:-------------------:|:-------------------:|
 |   VGA (640x480)  |         1.27        |        0.094        |        0.058        |
 |  WXGA (1280x720) |         4.4         |         0.3         |        0.203        |
 |  FHD (1920x1080) |        11.23        |         0.67        |        0.434        |
+
+*CPU results averaged over 10 runs
