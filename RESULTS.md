@@ -17,6 +17,9 @@ All results are averaged over 100 runs unless otherwise mentioned
 ### Intel(R) Xeon(R) CPU E5-1620 0 @ 3.60GHz (GPU2)
 462.37 ms (1-core)
 
+### nVidia GeForce GTX 980M (Gigabyte P35X v4)
+3.74 ms
+
 ### nVidia GeForce GTX 980 (GPU2)
 2.99 ms
 
@@ -49,7 +52,6 @@ All results are averaged over 100 runs unless otherwise mentioned
 batch 1 31.6170 ms
 
 (batch > 1 is not better in performance)
-
 
 ### nVidia TX1 nVidia TX1 thnets cudnn 4
 
