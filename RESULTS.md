@@ -11,6 +11,9 @@ All results are averaged over 100 runs unless otherwise mentioned
 ### Macbook Pro 15in Late 2013 CPU intel i7
 31.90 ms
 
+### Intel Core i7 4710HQ (Gigabyte P35x V4)
+25.30 ms (4C8T)
+
 ### Macbook Pro 15in Late 2013 GPU GT 750M 
 25.18 ms
 
