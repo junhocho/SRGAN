@@ -1,5 +1,5 @@
 -- model from:
--- https://github.com/soumith/imagenet-multiGPU.torch/blob/master/models/alexnetowt_cudnn.lua
+-- https://github.com/soumith/imagenet-multiGPU.torch/blob/master/models/alexnetowt.lua
 
 
 return {
