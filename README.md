@@ -33,3 +33,7 @@ Note that the ODroid has 8 cores, 4 slow and 4 fast, for best performance use on
 ```
 taskset -c 4-7 th profile-model.lua ...
 ```
+
+### License
+
+MIT
