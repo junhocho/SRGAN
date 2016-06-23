@@ -1,365 +1,254 @@
-local profiler = {}
-local xlua = assert(require('xlua'))
-local parser = assert(require('./parser'))
+local op_count
+local op_used
+local multiply_adds = opt.MACs
 
--- convert network for cudnn
-local function convertCUDNN(net, create, index)
-   create = create or nn.Sequential()
-   index = index or 1
-   local module = net.modules[index]
-   local module_name = module.__typename
-   local module_last = index == #net.modules
-
-   while module_name == 'nn.Sequential' do
-      -- branching net module
-      if module_last then
-         return convertCUDNN(module, create)
-      end
-
-      create = convertCUDNN(module, create)
-      index = index + 1
-      module = net.modules[index]
-      module_name = module.__typename
-      module_last = index == #net.modules
-   end
-
-   if module_name == 'nn.SpatialConvolutionMM' then
-
-      local tmp_module = cudnn.SpatialConvolution
-         ( module.nInputPlane
-         , module.nOutputPlane
-         , module.kW, module.kH
-         , module.dW, module.dH
-         )
-
-      tmp_module.weight = module.weight:float():reshape
-         ( module.nOutputPlane
-         , module.nInputPlane
-         , module.kW, module.kH
-         )
-
-      tmp_module.bias = module.bias:float()
-
-      create:add(tmp_module)
-   elseif module_name == 'nn.SpatialMaxPooling' then
-
-      local tmp_module = cudnn.SpatialMaxPooling
-         ( module.kW, module.kH
-         , module.dW, module.dH)
-
-      create:add(tmp_module)
-   elseif module_name == 'nn.ReLU' then
-
-      local tmp_module = cudnn.ReLU()
-
-      create:add(tmp_module)
-   elseif module_name == 'nn.Dropout' then
-
-      module.train = false
-
-      create:add(module)
-   elseif module_name == 'nn.SoftMax' then
-      -- do nothing
-   elseif module_name == 'nn.LogSoftMax' then
-      -- do nothing
-   else
-      create:add(module)
-   end
-
-
-   if module_last then
-      -- construction of spatial net complete
-      return create
-   end
-
-   return convertCUDNN(net, create, (index+1))
+function count_ops(network, input)
+    op_count = 0
+    op_used = {}
+    network:apply(intercept_updateOutput)
+    inputImg = input[1]
+    network:forward(input)
+    network:apply(restore_updateOutput)
+    return op_count, op_used
 end
 
-
-local function calc_conv(layer, input, map, ops)
-   local output = assert(layer.output)
-   local k = layer.conv.k
-   local p = layer.conv.p or 0
-   if ('boolean' == type(p)) and p then
-      -- auto generate a padding value to give same output size as input
-      p = math.floor((k-1)/2)
-   end
-   local s = layer.conv.s or 1
-
-   map.width  = math.floor((map.width  + (2 * p) - k) / s) + 1
-   map.height = math.floor((map.height + (2 * p) - k) / s) + 1
-   local output_map = map.width * map.height
-   local ops_kernel = (2 * k^2) -- kernel + comb
-
-   if not layer.columns then
-      local ops_bias = output * output_map
-
-      ops.conv = ops.conv + (input * output * output_map * ops_kernel + ops_bias)
-   else
-      assert('number' == type(layer.columns))
-      local input = input / layer.columns
-      local output = output / layer.columns
-      local ops_bias = output * output_map
-      local ops_column = (input * output * output_map * ops_kernel + ops_bias)
-
-      ops.conv = ops.conv + (ops_column * layer.columns)
-   end
-
-   if layer.nlmp then
-      if not ( ('ReLU' == layer.nlmp)
-            or ('Threshold' == layer.nlmp)
-            or ('SoftMax' == layer.nlmp)
-            or ('LogSoftMax' == layer.nlmp)) then
-
-         error('do not know this non-linear mapper module '..layer.nlmp)
-      else
-         local ops_nlmp = output * output_map
-         ops.conv = ops.conv + ops_nlmp
-      end
-   end
-
-   if not layer.pool then
-      -- calculate neurons for conv without pooling
-      ops.neurons = ops.neurons + (output * output_map)
-   else
-      local size = layer.pool
-      local stride = layer.pool
-      if 'table' == type(layer.pool) then
-         size   = layer.pool.size
-         stride = layer.pool.stride
-      end
-
-      map.width  = math.floor((map.width  - size) / stride) + 1
-      map.height = math.floor((map.height - size) / stride) + 1
-      local output_map = map.width * map.height
-
-      ops.pool = ops.pool + (size^2 * output_map)
-
-      -- calculate neurons for conv with pooling
-      ops.neurons = ops.neurons + (output * output_map)
-   end
-
-   return output
+-- Intercept updateOutput. At each call increment op_count appropriately.
+function intercept_updateOutput(module)
+    module.updateOutput_original = module.updateOutput
+    module.updateOutput = function(self, input)
+        compute_ops(module, input)
+        return module:updateOutput_original(input)
+    end
 end
 
-local function calc_linear(layer, input, ops)
-   local output = assert(layer.linear)
-   local ops_weights = (2 * input * output)
-   local ops_bias = output
-   ops.mlp = ops.mlp + ops_weights + ops_bias
-
-   if layer.nlmp then
-      if not ( ('ReLU' == layer.nlmp)
-            or ('Threshold' == layer.nlmp)
-            or ('SoftMax' == layer.nlmp)
-            or ('LogSoftMax' == layer.nlmp)) then
-
-         error('do not know this non-linear mapper module '..layer.nlmp)
-      else
-         local ops_nlmp = output
-         ops.mlp = ops.mlp + ops_nlmp
-      end
-   end
-
-   -- calculate neurons for linear
-   ops.neurons = ops.neurons + output
-
-   return output
+-- Restore original network behaviour
+function restore_updateOutput(module)
+    assert(module.updateOutput_original,
+        "restore_updateOutput should be called after intercept_updateOutput!")
+    module.updateOutput = module.updateOutput_original
+    module.updateOutput_original = nil
 end
 
-local function calc_transform(layer, input)
-   local transform = layer.transform
-   local output = 0
-   local height = 0
-   local width = 0
-   if type(transform.size) == 'table' then
-      height = transform.size.height
-      width = transform.size.width
-   else
-      height = transform.size
-      width = transform.size
-   end
-
-   if 'Reshape' == transform.name then
-      -- calculate new output after reshape
-      output = (width * height * input)
-   elseif 'View' == transform.name then
-      -- calculate new output after reshape
-      output = (width * height * input)
-   else
-      error('do not know this transform module '..transform.name)
-   end
-
-   return output
+-- Compute #flops that specified module needs to process an input.
+-- module_handlers table is at the bottom of this file
+function compute_ops(module, input)
+    module_name = torch.type(module)
+    handler = module_handlers[module_name]
+    assert(handler, string.format("No handler for module %s!", module_name))
+    local ops = handler(module, input)
+    op_count = op_count + ops
+    local maps = 0
+    local neurons = 0
+    if torch.type(module) ~= 'nn.JoinTable' and torch.type(module) ~= 'nn.CAddTable' then
+       for i = 1, input:dim() do
+          if i == 1 then
+             maps = input:size(1)
+             neurons = input:size(1)
+          else
+             maps = maps .. ' x ' .. input:size(i)
+             neurons = neurons * input:size(i)
+          end
+       end
+    else
+    end
+    table.insert(op_used, {name = torch.type(module),
+                           ops = ops,
+                           maps = maps,
+                           neurons = neurons})
 end
 
-function profiler:calc_ops(def, input, map, pos, ops)
-   pos = pos or 1
-   ops = ops or {conv = 0, pool = 0, mlp = 0, neurons = 0}
-   local layer = assert(def[pos], 'no layer at position')
+--------------------------------------------------------------------------------
+------------------------------- Module handlers --------------------------------
+--------------------------------------------------------------------------------
 
-   while 0 ~= #layer do
-      ops, input, map = self:calc_ops(layer, input, map, 1, ops)
-
-      if (#def == pos) then
-         return ops, input, map
-      end
-
-      pos = pos+1
-      layer = assert(def[pos], 'no layer at position')
-   end
-
-   if layer.conv then
-      -- calculate ops for conv
-      output = calc_conv(layer, input, map, ops)
-   elseif layer.linear then
-      -- calculate ops for linear
-      output = calc_linear(layer, input, ops)
-   elseif layer.transform then
-      -- calculate ops for transfrom
-      output = calc_transform(layer, input)
-   else
-      error('unknown layer type')
-   end
-
-   if (#def == pos) then
-      return ops, output, map
-   end
-
-   return self:calc_ops(def, output, map, pos+1, ops)
+local function ops_nothing(module, input)
+    return 0
 end
 
-function profiler:ops(net, img)
-   assert(img:dim() == 3, 'ops image needs to have 3 dimensions')
-   local channel = img:size(1)
-   local map = { width  = img:size(3), height = img:size(2), }
-   local def = parser:network(net, img)
-
-   return self:calc_ops(def, channel, map)
+local function ops_linear(module, input)
+    local batch_size = input:dim() == 2 and input:size(1) or 1
+    local weight_ops = module.weight:nElement() * (multiply_adds and 1 or 2)
+    local bias_ops = module.bias:nElement()
+    local ops_per_sample = weight_ops + bias_ops
+    return batch_size * ops_per_sample
 end
 
-local function calc_time_nnx(net, img, iterations)
-   local nn_X = assert(require 'nn_X')
-
-   -- parse network for nnx
-   local dst, src = nn_X:compile(net, img:type(), img:size())
-
-   local timer = torch.Timer()
-   local timing = torch.FloatTensor(iterations)
-   local t = 0
-
-   -- iterations plus one to prime the jit
-   for i=1, (iterations+1) do
-      xlua.progress(i, iterations)
-
-      timer:reset()
-
-      nn_X:forward(img)
-
-      t = timer:time().real
-      timing[(i%iterations)+1] = t
-   end
-
-   local scale = timing:mean()*1024*1024
-   local bandwidth_total = BANDWIDTH.src+BANDWIDTH.dst
-   print(string.format('   Bandwidth to memory   [MByte/sec]: %d', BANDWIDTH.dst/scale))
-   print(string.format('   Bandwidth from memory [MByte/sec]: %d', BANDWIDTH.src/scale))
-   print(string.format('   Bandwidth total       [MByte/sec]: %d', bandwidth_total/scale))
-
-   nn_X:close()
-
-   return timing:mean(), tmp
+local function ops_logsoftmax(module, input)
+    local batch_size = input:dim() == 2 and input:size(1) or 1
+    local input_dim = input:dim() == 2 and input:size(2) or input:size(1)
+    local expminusapprox_ops = 1 -- around 8 in Torch
+    -- +2 for accumulation and substraction in two loops
+    local ops_per_elem = expminusapprox_ops + 1 + 1
+    local ops_per_sample = input_dim * ops_per_elem
+    return batch_size * ops_per_sample
 end
 
-local function calc_time_cuda(net, img, iterations)
-   collectgarbage()
-   if not sys.execute('uname -a'):find('tegra') then
-      assert(require("cunn"))
-   else
-      assert(require("cudnn"))
-
-      net = convertCUDNN(net)
-      print('network has been converted to CUDNN:')
-      print(net)
-      net = net:cuda()
-
-      cutorch.setDevice(1)
---      print('==> using GPU #' .. cutorch.getDevice())
---      print(cutorch.getDeviceProperties(1))
-      cutorch.synchronize()
-   end
-
-   local tmp = false
-   local timer = torch.Timer()
-   local timing = torch.FloatTensor(iterations)
-   local t = 0
-   net:cuda()
-
-   -- iterations plus one to prime the jit
-   for i=1, (iterations+1) do
-      xlua.progress(i, iterations)
-
-      timer:reset()
-
-      local img_cuda = img:cuda()
-      tmp = net:forward(img_cuda)
-      cutorch.synchronize()
-      tmp:float()
-
-      t = timer:time().real
-      timing[(i%iterations)+1] = t
-   end
-
-   return timing:mean(), tmp
+-- WARNING: an oversimplified version
+local function ops_nonlinearity(module, input)
+    return input:nElement()
 end
 
-local function calc_time_cpu(net, img, iterations)
-   local tmp = false
-   local timer = torch.Timer()
-   local timing = torch.FloatTensor(iterations)
-   local t = 0
+local function ops_convolution(module, input)
+    assert(input:dim() == 4, "ops_convolution supports only batched inputs!")
+    assert(input:size(2) == module.nInputPlane, "number of input planes doesn't match!")
+    local batch_size = input:size(1)
+    local input_planes = input:size(2)
+    local input_height = input:size(3)
+    local input_width = input:size(4)
 
-   -- iterations plus one to prime the jit
-   for i=1, (iterations+1) do
-      xlua.progress(i, iterations)
+    -- ops per output element
+    local kernel_ops = module.kH * module.kW * input_planes * (multiply_adds and 1 or 2)
+    local bias_ops = 1
+    local ops_per_element = kernel_ops + bias_ops
 
-      timer:reset()
+    local output_width = math.floor((input_width + 2 * module.padW - module.kW) / module.dW + 1)
+    local output_height = math.floor((input_height + 2 * module.padH - module.kH) / module.dH + 1)
 
-      tmp = net:forward(img)
-
-      t = timer:time().real
-      timing[(i%iterations)+1] = t
-   end
-
-   return timing:mean(), tmp
+    return batch_size * module.nOutputPlane * output_width * output_height * ops_per_element
 end
 
-function profiler:time(net, img, iterations, platform)
-   iterations = iterations or 10
-   local time = { total = 0, conv = 0, mlp = 0, }
+local function ops_fullconvolution(module, input)
+    assert(input:dim() == 4, "ops_fullconvolution supports only batched inputs!")
+    assert(input:size(2) == module.nInputPlane, "number of input planes doesn't match!")
+    local batch_size = input:size(1)
+    local input_planes = input:size(2)
+    local input_height = input:size(3)
+    local input_width = input:size(4)
 
-   if 'cuda' == platform then
+    -- ops per input element
+    local single_kernel_ops = module.kH * module.kW * input_planes * (multiply_adds and 1 or 2)
+    local sample_kernel_ops = input_planes * input_width * input_height * single_kernel_ops
 
-      time.total = calc_time_cuda(net, img, iterations)
+    local output_width = (input_width - 1) * module.dW - 2 * module.padW + module.kW + module.adjW
+    local output_height = (input_height - 1) * module.dH - 2 * module.padW + module.kH + module.adjH
+    local bias_ops = output_width * output_height * module.nOutputPlane
 
-   elseif 'nnx' == platform then
-
-      time.total = calc_time_nnx(net, img, iterations)
-
-   elseif 2 ~= #net['modules'] then
-
-      time.total = calc_time_cpu(net, img, iterations)
-
-   else
-      local tmp = false
-
-      time.conv, tmp = calc_time_cpu(net.modules[1], img, iterations)
-      time.mlp       = calc_time_cpu(net.modules[2], tmp, iterations)
-
-      time.total = time.conv + time.mlp
-   end
-
-   return time
+    return batch_size * (sample_kernel_ops + bias_ops)
 end
 
-return profiler
+local function ops_dilatedconvolution(module, input)
+    assert(input:dim() == 4, "ops_convolution supports only batched inputs!")
+    assert(input:size(2) == module.nInputPlane, "number of input planes doesn't match!")
+    local batch_size = input:size(1)
+    local input_planes = input:size(2)
+    local input_height = input:size(3)
+    local input_width = input:size(4)
+    local dilW = module.dilationW
+    local dilH = module.dilationH
+
+    -- ops per output element
+    local kernel_ops = module.kH * module.kW * input_planes * (multiply_adds and 1 or 2)
+    local bias_ops = 1
+    local ops_per_element = kernel_ops + bias_ops
+
+    local output_width = math.floor(
+                         (input_width + 2 * module.padW - dilW * (module.kW - 1) + 1)
+                         /module.dW + 1)
+    local output_height = math.floor(
+                          (input_height + 2 * module.padH - dilH * (module.kH - 1) + 1)
+                          /module.dH + 1)
+
+    return batch_size * module.nOutputPlane * output_width * output_height * ops_per_element
+end
+
+local function ops_pooling(module, input)
+    assert(input:dim() == 4, "ops_averagepooling supports only batched inputs!")
+    local batch_size = input:size(1)
+    local input_planes = input:size(2)
+    local input_height = input:size(3)
+    local input_width = input:size(4)
+
+    local kernel_ops = module.kH * module.kW
+
+    local output_width = math.floor((input_width + 2 * module.padW - module.kW) / module.dW + 1)
+    local output_height = math.floor((input_height + 2 * module.padH - module.kH) / module.dH + 1)
+
+    return batch_size * input_planes * output_width * output_height * kernel_ops
+end
+
+local function ops_unpooling(module, input)
+    assert(input:dim() == 4, "ops_unpooling supports only batched inputs!")
+    local batch_size = input:size(1)
+    local input_planes = input:size(2)
+    local input_height = input:size(3)
+    local input_width = input:size(4)
+
+
+    local output_width = (input_width - 1) * module.pooling.dW - (2 * module.pooling.padW - module.pooling.kW)
+    local output_height = (input_height - 1) * module.pooling.dH - (2 * module.pooling.padH - module.pooling.kH)
+
+    return batch_size * input_planes * output_width * output_height
+end
+
+local function ops_caddtable(module, input)
+    assert(torch.type(input) == 'table', "ops_caddtable input should be a table!")
+    return input[1]:nElement() * #input
+end
+
+local function ops_batchnorm(module, input)
+    return input:nElement() * (multiply_adds and 1 or 2)
+end
+
+local function ops_sum(module, input)
+   assert(not module.nInputDims, 'nInputDims mode of nn.Sum not supported.')
+   local ops = 1
+   for d = 1, input:dim() do
+      local s = input:size(d)
+      ops = d ~= module.dimension and ops * s or ops * (s - 1)
+   end
+   return ops
+end
+
+module_handlers = {
+    -- Containers
+    ['nn.Sequential'] = ops_nothing,
+    ['nn.Parallel'] = ops_nothing,
+    ['nn.Concat'] = ops_nothing,
+    ['nn.gModule'] = ops_nothing,
+    ['nn.Identity'] = ops_nothing,
+    ['nn.DataParallelTable'] = ops_nothing,
+    ['nn.Contiguous'] = ops_nothing,
+    ['nn.ConcatTable'] = ops_nothing,
+    ['nn.JoinTable'] = ops_nothing,
+    ['nn.Padding'] = ops_nothing,
+
+    -- Nonlinearities
+    ['nn.ReLU'] = ops_nonlinearity,
+    ['nn.PReLU'] = ops_nonlinearity,
+    ['nn.LogSoftMax'] = ops_logsoftmax,
+    ['nn.SoftMax'] = ops_logsoftmax,   --TODO Update it with correct ops calculator
+    ['cudnn.ReLU'] = ops_nonlinearity,
+    ['cudnn.PReLU'] = ops_nonlinearity,
+
+    -- Basic modules
+    ['nn.Linear'] = ops_linear,
+    ['nn.Sum'] = ops_sum,
+
+    -- Spatial Modules
+    ['nn.SpatialConvolution'] = ops_convolution,
+    ['nn.SpatialConvolutionMM'] = ops_convolution,
+    ['nn.SpatialDilatedConvolution'] = ops_dilatedconvolution,
+    ['nn.SpatialFullConvolution'] = ops_fullconvolution,
+    ['nn.SpatialMaxPooling'] = ops_pooling,
+    ['nn.SpatialAveragePooling'] = ops_pooling,
+    ['nn.SpatialMaxUnpooling'] = ops_unpooling,
+    ['nn.SpatialZeroPadding'] = ops_nothing,
+    ['nn.SpatialBatchNormalization'] = ops_nothing, -- Can be squashed
+
+    ['cudnn.SpatialConvolution'] = ops_convolution,
+    ['cudnn.SpatialConvolutionMM'] = ops_convolution,
+    ['cudnn.SpatialDilatedConvolution'] = ops_dilatedconvolution,
+    ['cudnn.SpatialMaxPooling'] = ops_pooling,
+    ['cudnn.SpatialAveragePooling'] = ops_pooling,
+    ['cudnn.SpatialBatchNormalization'] = ops_nothing, -- Can be squashed
+
+    -- Table modules
+    ['nn.CAddTable'] = ops_caddtable,
+
+    -- Various modules
+    ['nn.View'] = ops_nothing,
+    ['nn.Reshape'] = ops_nothing,
+    ['nn.Dropout'] = ops_nothing, -- Is turned off in inference
+    ['nn.SpatialDropout'] = ops_nothing, -- Is turned off in inference
+    ['nn.Concat'] = ops_nothing,
+}

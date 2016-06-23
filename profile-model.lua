@@ -1,9 +1,10 @@
 require 'nn'
 require 'xlua'
 require 'sys'
+
 local lapp = assert(require('pl.lapp'))
-local profile = assert(require('src/profiler'))
-local spatial = assert(require('src/spatial'))
+local opts = assert(require('opts'))
+local profileTime = assert(require('src/modelTimer.lua'))
 
 -- to load a 64-bit model in binary, we override torch.DiskFile if 32bit machine (ARM):
 local systembit = tonumber(io.popen("getconf LONG_BIT"):read('*a'))
@@ -14,23 +15,17 @@ end
 local pf = function(...) print(string.format(...)) end
 local r = sys.COLORS.red
 local g = sys.COLORS.green
+local b = sys.COLORS.blue
 local n = sys.COLORS.none
 local THIS = sys.COLORS.blue .. 'THIS' .. n
 
-local opt = lapp [[
- -m, --model      (default '')   Path & filename of network model to profile
- -p, --platform   (default cpu)  Select profiling platform (cpu|cuda|nnx)
- -c, --channel    (default 0)    Input image channel number
- -e, --eye        (default 0)    Network eye
- -w, --width      (default 0)    Image width
- -h, --height     (default 0)    Image height
- -i, --iter       (default 10)   Averaging iterations
- -s, --save       (default -)    Save the float model to file as <model.net.ascii>in
-                                 [a]scii or as <model.net> in [b]inary format (a|b)
-]]
+-- Parsing input arguemnets
+opt = opts.parse(arg)
+
 torch.setdefaulttensortype('torch.FloatTensor')
 
-
+paths.dofile('src/profiler.lua')
+-- Loading model
 if string.find(opt.model, '.lua', #opt.model-4) then
    model = assert(require('./'..opt.model))
    pf('Building %s model from model...\n', r..model.name..n)
@@ -48,8 +43,16 @@ else
    error('Network named not recognized')
 end
 
-if opt.channel ~= 0 then
-   model.channel = opt.channel
+local iBatch, iChannel, iWidth, iHeight = string.match(opt.res, '(%d+)x(%d+)x(%d+)x(%d+)')
+--                                  or string.match(opt.res, '(%d+)X(%d+)X(%d+)')
+
+iBatch = tonumber(iBatch)
+iChannel = tonumber(iChannel)
+iWidth = tonumber(iWidth)
+iHeight = tonumber(iHeight)
+
+if iChannel ~= 0 then
+   model.channel = iChannel
 end
 
 eye = eye or 100
@@ -57,22 +60,23 @@ if opt.eye ~= 0 then
    eye = opt.eye
 end
 
-local width    = (opt.width ~= 0) and opt.width or eye
-local height   = (opt.height ~= 0) and opt.height or width
+local batch    = (iBatch ~= 0) and iBatch
+local width    = (iWidth ~= 0) and iWidth or eye
+local height   = (iHeight ~= 0) and iHeight or width
 
 img = torch.FloatTensor(model.channel, height, width)
-
+imgBatch = torch.FloatTensor(batch, model.channel, height, width)
 
 -- spatial net conversion
-if (width ~= eye) or (height ~= eye) then
-   if (opt.platform == 'nnx') then
-      print('Convert network to nn-X spatial')
-      net = spatial.net_spatial_mlp(net, torch.Tensor(model.channel, eye, eye))
-   else
-      print('Convert network to spatial')
-      net = spatial.net_spatial(net, torch.Tensor(model.channel, eye, eye))
-   end
-end
+--if (width ~= eye) or (height ~= eye) then
+--   if (opt.platform == 'nnx') then
+--      print('Convert network to nn-X spatial')
+--      net = spatial.net_spatial_mlp(net, torch.Tensor(model.channel, eye, eye))
+--   else
+--      print('Convert network to spatial')
+--      net = spatial.net_spatial(net, torch.Tensor(model.channel, eye, eye))
+--   end
+--end
 
 
 if opt.save == 'a' then
@@ -87,35 +91,59 @@ end
 
 -- calculate the number of operations performed by the network
 if opt.platform == 'nnx' then
-   ops = profile:ops(net, torch.FloatTensor(model.channel, eye, eye))
+   totalOps , layer_ops = count_ops(net, torch.Tensor(model.channel, eye, eye))
 else
    if not model.def then
-      ops = profile:ops(net, img)
+      totalOps, layerOps = count_ops(net, imgBatch)
    else
-      ops = profile:calc_ops
-         ( model.def
-         , model.channel
-         , { width  = img:size(3), height = img:size(2), }
-         )
+      totalOps, layerOps = count_ops(model.def, imgBatch)
    end
 end
-ops_total = ops.conv + ops.pool + ops.mlp
 
-pf('   Total number of neurons: %d', ops.neurons)
-pf('   Total number of trainable parameters: %d', net:getParameters():size(1))
 if ((width ~= eye) or (height ~= eye)) and (opt.platform == 'nnx') then
-   pf('   Operations estimation for image size: %d X %d', eye, eye)
+   pf('Operations estimation for image size: %d X %d', eye, eye)
 else
-   pf('   Operations estimation for image size: %d X %d', width, height)
+   pf('Operations estimation for image size: %d X %d', width, height)
 end
-pf('    + Total: %.2f G-Ops', ops_total * 1e-9)
-pf('    + Conv/Pool/MLP: %.2fG/%.2fk/%.2fM(-Ops)\n',
-   ops.conv * 1e-9, ops.pool * 1e-3, ops.mlp * 1e-6)
 
+
+-- Compute per layer opt counts
+print('\n-------------------------------------------------------------------------------------')
+pf('%5s %-29s %20s %11s %15s', 'S.No.', 'Module Name', 'Input Resolution', 'Neurons', 'Operations')
+print('=====================================================================================')
+local opsPerCommonModule = {}
+local totalNeurons = 0
+for i, info in pairs(layerOps) do
+    local name = info['name']
+    local ops = info['ops']
+    local maps = info['maps']
+    local neurons = info['neurons']
+    if not opsPerCommonModule[name] then
+        opsPerCommonModule[name] = 0
+    end
+    pf('%5d %s%-29s%s %s%20s%s %11s %s%15s%s Ops', i, g, name, n, r, maps, n, neurons, r, ops, n)
+    totalNeurons = totalNeurons + neurons
+    opsPerCommonModule[name] = opsPerCommonModule[name] + ops
+end
+
+print('-------------------------------------------------------------------------------------')
+pf('   %s%s%s %d ', r, 'Total number of trainable parameters:', n, net:getParameters():size(1))
+pf('   %s%-37s%s %d', r, 'Total number of neurons:', n, totalNeurons)
+print('-------------------------------------------------------------------------------------')
+print('Operations per common module')
+-- Print total
+local ops = opt.MACs and 'MACs' or 'Ops'
+for name, count in pairs(opsPerCommonModule) do
+    if count > 0 then
+        print(string.format('   %-38s%.4e %s', name..':', count, ops))
+    end
+end
+pf('   %s%-38s%.4e %s', b, 'Total:', totalOps, ops)
+print('=====================================================================================')
 
 -- time and average over a number of iterations
 pf('Profiling %s, %d iterations', r..model.name..n, opt.iter)
-time = profile:time(net, img, opt.iter, opt.platform)
+time = profileTime:time(net, imgBatch, opt.iter, opt.platform)
 
 local d = g..'CPU'..n
 if 'cuda' == opt.platform then
@@ -130,4 +158,6 @@ if (time.conv ~= 0) and (time.mlp ~= 0) then
    pf('    + MLP time: %.2f ms', time.mlp * 1e3)
 end
 
-pf('   Performance for %s %s: %.2f G-Ops/s\n', THIS, d, ops_total * 1e-9 / time.total)
+pf('   Performance for %s %s: %.2f G-Ops/s\n', THIS, d, totalOps * 1e-9 / time.total)
+
+
