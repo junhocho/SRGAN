@@ -45,6 +45,14 @@ else
    error('Network named not recognized')
 end
 
+if net:type() == 'torch.CudaTensor' then
+   cudnn.convert(net, nn)
+   net:float()
+end
+
+net:evaluate()
+net:clearState()
+
 local iBatch, iChannel, iWidth, iHeight = string.match(opt.res, '(%d+)x(%d+)x(%d+)x(%d+)')
 --                                  or string.match(opt.res, '(%d+)X(%d+)X(%d+)')
 
@@ -75,7 +83,7 @@ end
 
 -- calculate the number of operations performed by the network
 if not model.def then
-   totalOps, layerOps = count_ops(net, imgBatch)
+   totalOps, layerOps = count_ops(net:clone(), imgBatch)
 else
    totalOps, layerOps = count_ops(model.def, imgBatch)
 end
