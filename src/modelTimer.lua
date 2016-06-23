@@ -74,39 +74,6 @@ local function convertCUDNN(net, create, index)
    return convertCUDNN(net, create, (index+1))
 end
 
-local function calc_time_nnx(net, img, iterations)
-   local nn_X = assert(require 'nn_X')
-
-   -- parse network for nnx
-   local dst, src = nn_X:compile(net, img:type(), img:size())
-
-   local timer = torch.Timer()
-   local timing = torch.FloatTensor(iterations)
-   local t = 0
-
-   -- iterations plus one to prime the jit
-   for i=1, (iterations+1) do
-      xlua.progress(i, iterations)
-
-      timer:reset()
-
-      nn_X:forward(img)
-
-      t = timer:time().real
-      timing[(i%iterations)+1] = t
-   end
-
-   local scale = timing:mean()*1024*1024
-   local bandwidth_total = BANDWIDTH.src+BANDWIDTH.dst
-   print(string.format('   Bandwidth to memory   [MByte/sec]: %d', BANDWIDTH.dst/scale))
-   print(string.format('   Bandwidth from memory [MByte/sec]: %d', BANDWIDTH.src/scale))
-   print(string.format('   Bandwidth total       [MByte/sec]: %d', bandwidth_total/scale))
-
-   nn_X:close()
-
-   return timing:mean(), tmp
-end
-
 local function calc_time_cuda(net, img, iterations)
    collectgarbage()
    if not sys.execute('uname -a'):find('tegra') then
@@ -177,10 +144,6 @@ function profileTime:time(net, img, iterations, platform)
    if 'cuda' == platform then
 
       time.total = calc_time_cuda(net, img, iterations)
-
-   elseif 'nnx' == platform then
-
-      time.total = calc_time_nnx(net, img, iterations)
 
    elseif 2 ~= #net['modules'] then
 

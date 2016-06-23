@@ -12,7 +12,7 @@ function opts.parse(arg)
    local opt = lapp [[
    Command line options:
    -m, --model      (default '')    Path & filename of network model to profile
-   -p, --platform   (default cpu)   Select profiling platform (cpu|cuda|nnx)
+   -p, --platform   (default cpu)   Select profiling platform (cpu|cuda)
    -r, --res        (default 0x0x0x0) Input image resolution Channel x Width x Height
    -e, --eye        (default 0)     Network eye
    -i, --iter       (default 10)    Averaging iterations

@@ -67,18 +67,6 @@ local height   = (iHeight ~= 0) and iHeight or width
 img = torch.FloatTensor(model.channel, height, width)
 imgBatch = torch.FloatTensor(batch, model.channel, height, width)
 
--- spatial net conversion
---if (width ~= eye) or (height ~= eye) then
---   if (opt.platform == 'nnx') then
---      print('Convert network to nn-X spatial')
---      net = spatial.net_spatial_mlp(net, torch.Tensor(model.channel, eye, eye))
---   else
---      print('Convert network to spatial')
---      net = spatial.net_spatial(net, torch.Tensor(model.channel, eye, eye))
---   end
---end
-
-
 if opt.save == 'a' then
    pf('Saving model as model.net.ascii... ')
    torch.save('model.net.ascii', net, 'ascii')
@@ -90,21 +78,13 @@ elseif opt.save == 'b' then
 end
 
 -- calculate the number of operations performed by the network
-if opt.platform == 'nnx' then
-   totalOps , layer_ops = count_ops(net, torch.Tensor(model.channel, eye, eye))
+if not model.def then
+   totalOps, layerOps = count_ops(net, imgBatch)
 else
-   if not model.def then
-      totalOps, layerOps = count_ops(net, imgBatch)
-   else
-      totalOps, layerOps = count_ops(model.def, imgBatch)
-   end
+   totalOps, layerOps = count_ops(model.def, imgBatch)
 end
 
-if ((width ~= eye) or (height ~= eye)) and (opt.platform == 'nnx') then
-   pf('Operations estimation for image size: %d X %d', eye, eye)
-else
-   pf('Operations estimation for image size: %d X %d', width, height)
-end
+pf('Operations estimation for image size: %d X %d', width, height)
 
 
 -- Compute per layer opt counts
@@ -148,8 +128,6 @@ time = profileTime:time(net, imgBatch, opt.iter, opt.platform)
 local d = g..'CPU'..n
 if 'cuda' == opt.platform then
    d = g..'GPU'..n
-elseif 'nnx' == opt.platform then
-   d = g..'nnX'..n
 end
 
 pf('   Forward average time on %s %s: %.2f ms', THIS, d, time.total * 1e3)
