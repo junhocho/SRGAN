@@ -88,8 +88,7 @@ else
    totalOps, layerOps = count_ops(model.def, imgBatch)
 end
 
-pf('Operations estimation for image size: %d X %d', width, height)
-
+pf('Operations estimation for image size: %d x %d', width, height)
 
 -- Compute per layer opt counts
 print('\n-----------------------------------------------------------------------------------------------')
@@ -117,18 +116,18 @@ for i, info in pairs(layerOps) do
 end
 
 print('-----------------------------------------------------------------------------------------------')
-pf('   %s%s%s: %d ', r, 'Total number of trainable parameters', n, net:getParameters():size(1))
-pf('   %s%-36s%s: %d', r, 'Total number of neurons', n, totalNeurons)
+pf('   %s%s%s : %d ', r, 'Total number of trainable parameters', n, net:getParameters():size(1))
+pf('   %s%-36s%s : %d', r, 'Total number of neurons', n, totalNeurons)
 print('-----------------------------------------------------------------------------------------------')
-print('Operations per common module')
+print('* Operations per common module *')
 -- Print total
 local ops = opt.MACs and 'MACs' or 'Ops'
 for name, count in pairs(opsPerCommonModule) do
     if count > 0 then
-        print(string.format('   %-36s: %.4e %s', name, count, ops))
+        print(string.format('   + %-35s: %.4e %s', name, count, ops))
     end
 end
-pf('   %s%-36s: %.4e %s', b, 'Total', totalOps, ops)
+pf('     %s%-35s: %.4e %s', b, 'Total', totalOps, ops)
 print('===============================================================================================')
 
 -- time and average over a number of iterations
