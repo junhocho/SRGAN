@@ -2,12 +2,14 @@ require 'nn'
 require 'xlua'
 require 'sys'
 
-require 'cunn'
-require 'cudnn'
-
 local lapp = assert(require('pl.lapp'))
 local opts = assert(require('opts'))
 local profileTime = assert(require('src/modelTimer.lua'))
+
+if opts.platform == 'cuda' then
+  require 'cunn'
+  require 'cudnn'
+end
 
 -- to load a 64-bit model in binary, we override torch.DiskFile if 32bit machine (ARM):
 local systembit = tonumber(io.popen("getconf LONG_BIT"):read('*a'))
