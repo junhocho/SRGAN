@@ -2,6 +2,7 @@ return {
    name = 'Net Large',
    channel = 3,
    createModel = function()
+      local classes = 30
       local model = nn.Sequential()
 
       -- convolution layer
@@ -29,7 +30,7 @@ return {
       model:add(nn.Linear(1024, 1024))
       model:add(nn.ReLU())
       model:add(nn.Dropout(0.5))
-      model:add(nn.Linear(1024, 17))
+      model:add(nn.Linear(1024, classes))
       model:add(nn.LogSoftMax())
 
       return model

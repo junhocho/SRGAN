@@ -14,6 +14,11 @@ return {
    channel = 3,
 
    createModel = function()
+      local depth = 18           -- Imagenet: 18, 34, 50, 101, 152 | Cifar: 20, 32, 44, 56, 110, 1202
+      local shortcutType = 'B'   -- B/C
+      local dataset = 'imagenet' -- imagenet/cifar10
+      local iChannels
+
       local nn = require 'nn'
       --require 'cunn'
 
@@ -22,11 +27,6 @@ return {
       local ReLU = nn.ReLU
       local Max = nn.SpatialMaxPooling
       local SBatchNorm = nn.SpatialBatchNormalization
-
-      local depth = 18           -- Imagenet: 18, 34, 50, 101, 152 | Cifar: 20, 32, 44, 56, 110, 1202
-      local shortcutType = 'B'   -- B/C
-      local dataset = 'imagenet' -- imagenet/cifar10
-      local iChannels
 
       -- The shortcut layer is either identity or 1x1 convolution
       local function shortcut(nInputPlane, nOutputPlane, stride)

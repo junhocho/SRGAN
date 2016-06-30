@@ -2,6 +2,7 @@ return {
    name = 'VGG',
    channel = 3,
    createModel = function()
+      local classes = 1000
       local modelType = 'A' -- on a titan black, B/D/E run out of memory even for batch-size 32
 
       -- Create tables describing VGG configurations A, B, D, E
@@ -47,7 +48,7 @@ return {
       classifier:add(nn.Threshold(0, 1e-6))
       --classifier:add(nn.BatchNormalization(4096, 1e-3))
       classifier:add(nn.Dropout(0.5))
-      classifier:add(nn.Linear(4096, 1000))
+      classifier:add(nn.Linear(4096, classes))
       classifier:add(nn.LogSoftMax())
       --classifier:cuda()
 
