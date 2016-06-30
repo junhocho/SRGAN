@@ -1,7 +1,7 @@
 return {
    name = 'AlexNet OWT',
    channel = 3,
-   mknet = function (self)
+   createModel = function()
       -- from https://code.google.com/p/cuda-convnet2/source/browse/layers/layers-imagenet-1gpu.cfg
       -- this is AlexNet that was presented in the One Weird Trick paper. http://arxiv.org/abs/1404.5997
       local features = nn.Sequential()

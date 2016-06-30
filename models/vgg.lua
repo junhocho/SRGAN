@@ -1,7 +1,7 @@
 return {
    name = 'VGG',
    channel = 3,
-   mknet = function (self)--createModel(nGPU)
+   createModel = function()
       local modelType = 'A' -- on a titan black, B/D/E run out of memory even for batch-size 32
 
       -- Create tables describing VGG configurations A, B, D, E

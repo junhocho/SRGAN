@@ -34,7 +34,7 @@ paths.dofile('src/profiler.lua')
 if string.find(opt.model, '.lua', #opt.model-4) then
    model = assert(require('./'..opt.model))
    pf('Building %s model from model...\n', r..model.name..n)
-   net = model:mknet()
+   net = model:createModel()
 elseif string.find(opt.model, '.net', #opt.model-4) then
    model = { channel = 3, name = 'Trained binary network' }
    pf('Loading %s model from binary file...\n', r..model.name..n)

@@ -1,8 +1,7 @@
 return {
    name = 'Net Large',
    channel = 3,
-   eye = 231,
-   mknet = function(self)
+   createModel = function()
       local model = nn.Sequential()
 
       -- convolution layer
