@@ -92,29 +92,39 @@ end
 
 pf('Operations estimation for image size: %d x %d', width, height)
 
+local function detailedPrint(...)
+   if opt.verbose == 'detail' or opt.verbose == 'medium' then
+      pf(...)
+   end
+end
+
 -- Compute per layer opt counts
-print('\n-----------------------------------------------------------------------------------------------')
-pf('%5s %-29s %20s %11s %15s %9s', 'S.No.', 'Module Name', 'Input Resolution', 'Neurons', 'Ops', '% Ops')
-print('===============================================================================================')
+detailedPrint('\n-----------------------------------------------------------------------------------------------')
+detailedPrint('%5s %-29s %20s %11s %15s %9s', 'S.No.', 'Module Name', 'Input Resolution', 'Neurons', 'Ops', '% Ops')
+detailedPrint('===============================================================================================')
 local opsPerCommonModule = {}
 local totalNeurons = 0
 for i, info in pairs(layerOps) do
-    local name = info['name']
-    local ops = info['ops']
-    local maps = info['maps']
-    local neurons = info['neurons']
-    if not opsPerCommonModule[name] then
-        opsPerCommonModule[name] = 0
-    end
-    local percOps = (ops/totalOps)*100
-    if percOps > 1 then
-       percOps = string.format('%s%9.4f%s', b, percOps, n)
-    else
-       percOps = string.format('%9.4f', percOps)
-    end
-    pf('%5d %s%-29s%s %s%20s%s %11s %s%15s%s %9s', i, g, name, n, r, maps, n, neurons, r, ops, n, percOps)
-    totalNeurons = totalNeurons + neurons
-    opsPerCommonModule[name] = opsPerCommonModule[name] + ops
+   local name = info['name']
+   local ops = info['ops']
+   local maps = info['maps']
+   local neurons = info['neurons']
+   if not opsPerCommonModule[name] then
+      opsPerCommonModule[name] = 0
+   end
+   local percOps = (ops/totalOps)*100
+   if percOps > 1 then
+      percOps = string.format('%s%9.4f%s', b, percOps, n)
+   else
+      percOps = string.format('%9.4f', percOps)
+   end
+   if opt.verbose == 'medium' and (ops/totalOps)*100 > 0 then
+      pf('%5d %s%-29s%s %s%20s%s %11s %s%15s%s %9s', i, g, name, n, r, maps, n, neurons, r, ops, n, percOps)
+   elseif opt.verbose == 'detail' then
+      pf('%5d %s%-29s%s %s%20s%s %11s %s%15s%s %9s', i, g, name, n, r, maps, n, neurons, r, ops, n, percOps)
+   end
+   totalNeurons = totalNeurons + neurons
+   opsPerCommonModule[name] = opsPerCommonModule[name] + ops
 end
 
 print('-----------------------------------------------------------------------------------------------')
@@ -143,5 +153,5 @@ if 'cuda' == opt.platform then
    d = g..'GPU'..n
 end
 
-pf('   Forward average time on %s %s: %.2f ms', THIS, d, time.total * 1e3)
-pf('   Performance for %s %s        : %.2f G-Ops/s\n', THIS, d, totalOps * 1e-9 / time.total)
+pf('   Forward average time on %s %s : %.2f ms', THIS, d, time.total * 1e3)
+pf('   Performance for %s %s         : %.2f G-Ops/s\n', THIS, d, totalOps * 1e-9 / time.total)
