@@ -215,6 +215,7 @@ module_handlers = {
     -- Nonlinearities
     ['nn.ReLU'] = ops_nonlinearity,
     ['nn.PReLU'] = ops_nonlinearity,
+    ['nn.Threshold'] = ops_nonlinearity,
     ['nn.LogSoftMax'] = ops_logsoftmax,
     ['nn.SoftMax'] = ops_logsoftmax,   --TODO Update it with correct ops calculator
     ['cudnn.ReLU'] = ops_nonlinearity,
@@ -233,6 +234,7 @@ module_handlers = {
     ['nn.SpatialAveragePooling'] = ops_pooling,
     ['nn.SpatialMaxUnpooling'] = ops_unpooling,
     ['nn.SpatialZeroPadding'] = ops_nothing,
+    ['nn.BatchNormalization'] = ops_nothing, -- Can be squashed
     ['nn.SpatialBatchNormalization'] = ops_nothing, -- Can be squashed
 
     ['cudnn.SpatialConvolution'] = ops_convolution,
