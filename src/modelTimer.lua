@@ -5,7 +5,7 @@ local function calc_time_cuda(net, img, iterations)
    collectgarbage()
 
    cutorch.setDevice(1)
-   cudnn.convert(net, cudnn)
+   cudnn.convert(net, nn)
    net:cuda()
 
    print('==> using GPU #' .. cutorch.getDevice())
