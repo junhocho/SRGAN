@@ -5,7 +5,7 @@ local function calc_time_cuda(net, img, iterations)
    collectgarbage()
 
    cutorch.setDevice(1)
-   cudnn.convert(net, nn)
+   cudnn.convert(net, cudnn, function(m) return torch.type(m):find('MaxPooling') end)
    net:cuda()
 
    print('==> using GPU #' .. cutorch.getDevice())
