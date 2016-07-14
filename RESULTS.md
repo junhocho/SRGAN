@@ -26,6 +26,12 @@ All results are averaged over 100 runs unless otherwise mentioned
 ### nVidia GeForce GTX 980 (GPU2)
 2.99 ms
 
+### nVidia GeForce GTX Titan X (GPU3)
+2.57 ms
+
+### nVidia GeForce GTX 1080 (GPU1)
+2.00 ms
+
 ### nVidia TX1 CPU
 114.66 ms
 
