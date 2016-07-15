@@ -1,6 +1,20 @@
 #Torch7 Profiling 
 # RESULTS TABLE
 
+# ResNet 18
+
+720p (720x1280) 
+
+67.7 Gops/frame
+
+###TitanX
+
+35.40 ms
+
+###GTX 1080
+
+25.48 ms
+
 # AlexNet OWT 
 operations: 1.43 G
 
