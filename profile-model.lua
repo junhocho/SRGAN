@@ -31,9 +31,9 @@ torch.setdefaulttensortype('torch.FloatTensor')
 paths.dofile('src/profiler.lua')
 -- Loading model
 if string.find(opt.model, '.lua', #opt.model-4) then
-   model = assert(require('./'..opt.model))
-   pf('Building %s model from model...\n', r..model.name..n)
-   net = model:createModel()
+   model = { channel = 3, name = opt.model }
+   pf('Building %s model \n', r..model.name..n)
+   net = require (opt.model)
 elseif string.find(opt.model, '.net', #opt.model-4) then
    model = { channel = 3, name = 'Trained binary network' }
    pf('Loading %s model from binary file...\n', r..model.name..n)

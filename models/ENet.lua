@@ -82,78 +82,76 @@ local function getEncoder()
    return model
 end
 
-return {
-   name = 'ENet',
-   channel = 3,
-   createModel = function()
-      local classes = 30
-      local model = getEncoder()
-      -- SpatialMaxUnpooling requires nn modules...
-      model:apply(function(module)
-         if module.modules then
-            for i,submodule in ipairs(module.modules) do
-               if torch.typename(submodule):match('nn.SpatialMaxPooling') then
-                  module.modules[i] = nn.SpatialMaxPooling(2, 2, 2, 2) -- TODO: make more flexible
-               end
-            end
+--------------------------------------------------------------------------------
+-- Model definition starts here
+--------------------------------------------------------------------------------
+
+local classes = 30
+local model = getEncoder()
+-- SpatialMaxUnpooling requires nn modules...
+model:apply(function(module)
+   if module.modules then
+      for i,submodule in ipairs(module.modules) do
+         if torch.typename(submodule):match('nn.SpatialMaxPooling') then
+            module.modules[i] = nn.SpatialMaxPooling(2, 2, 2, 2) -- TODO: make more flexible
          end
-      end)
-
-      -- find pooling modules
-      local pooling_modules = {}
-      model:apply(function(module)
-         if torch.typename(module):match('nn.SpatialMaxPooling') then
-            table.insert(pooling_modules, module)
-         end
-      end)
-      assert(#pooling_modules == 3, 'There should be 3 pooling modules')
-
-      function bottleneck(input, output, upsample, reverse_module)
-         local internal = output / 4
-         local input_stride = upsample and 2 or 1
-
-         local module = nn.Sequential()
-         local sum = nn.ConcatTable()
-         local main = nn.Sequential()
-         local other = nn.Sequential()
-         sum:add(main):add(other)
-
-         main:add(nn.SpatialConvolution(input, internal, 1, 1, 1, 1, 0, 0):noBias())
-         main:add(nn.SpatialBatchNormalization(internal, 1e-3))
-         main:add(nn.ReLU(true))
-         if not upsample then
-            main:add(nn.SpatialConvolution(internal, internal, 3, 3, 1, 1, 1, 1))
-         else
-            main:add(nn.SpatialFullConvolution(internal, internal, 3, 3, 2, 2, 1, 1, 1, 1))
-         end
-         main:add(nn.SpatialBatchNormalization(internal, 1e-3))
-         main:add(nn.ReLU(true))
-         main:add(nn.SpatialConvolution(internal, output, 1, 1, 1, 1, 0, 0):noBias())
-         main:add(nn.SpatialBatchNormalization(output, 1e-3))
-
-         other:add(nn.Identity())
-         if input ~= output or upsample then
-            other:add(nn.SpatialConvolution(input, output, 1, 1, 1, 1, 0, 0):noBias())
-            other:add(nn.SpatialBatchNormalization(output, 1e-3))
-            if upsample and reverse_module then
-               other:add(nn.SpatialMaxUnpooling(reverse_module))
-            end
-         end
-
-         if upsample and not reverse_module then
-            main:remove(#main.modules) -- remove BN
-            return main
-         end
-         return module:add(sum):add(nn.CAddTable()):add(nn.ReLU(true))
       end
-
-      --model:add(bottleneck(128, 128))
-      model:add(bottleneck(128, 64, true, pooling_modules[3]))         -- 32x64
-      model:add(bottleneck(64, 64))
-      model:add(bottleneck(64, 64))
-      model:add(bottleneck(64, 16, true, pooling_modules[2]))          -- 64x128
-      model:add(bottleneck(16, 16))
-      model:add(nn.SpatialFullConvolution(16, classes, 2, 2, 2, 2))
-      return model
    end
-}
+end)
+
+-- find pooling modules
+local pooling_modules = {}
+model:apply(function(module)
+   if torch.typename(module):match('nn.SpatialMaxPooling') then
+      table.insert(pooling_modules, module)
+   end
+end)
+assert(#pooling_modules == 3, 'There should be 3 pooling modules')
+
+function bottleneck(input, output, upsample, reverse_module)
+   local internal = output / 4
+   local input_stride = upsample and 2 or 1
+
+   local module = nn.Sequential()
+   local sum = nn.ConcatTable()
+   local main = nn.Sequential()
+   local other = nn.Sequential()
+   sum:add(main):add(other)
+
+   main:add(nn.SpatialConvolution(input, internal, 1, 1, 1, 1, 0, 0):noBias())
+   main:add(nn.SpatialBatchNormalization(internal, 1e-3))
+   main:add(nn.ReLU(true))
+   if not upsample then
+      main:add(nn.SpatialConvolution(internal, internal, 3, 3, 1, 1, 1, 1))
+   else
+      main:add(nn.SpatialFullConvolution(internal, internal, 3, 3, 2, 2, 1, 1, 1, 1))
+   end
+   main:add(nn.SpatialBatchNormalization(internal, 1e-3))
+   main:add(nn.ReLU(true))
+   main:add(nn.SpatialConvolution(internal, output, 1, 1, 1, 1, 0, 0):noBias())
+   main:add(nn.SpatialBatchNormalization(output, 1e-3))
+
+   other:add(nn.Identity())
+   if input ~= output or upsample then
+      other:add(nn.SpatialConvolution(input, output, 1, 1, 1, 1, 0, 0):noBias())
+      other:add(nn.SpatialBatchNormalization(output, 1e-3))
+      if upsample and reverse_module then
+         other:add(nn.SpatialMaxUnpooling(reverse_module))
+      end
+   end
+
+   if upsample and not reverse_module then
+      main:remove(#main.modules) -- remove BN
+      return main
+   end
+   return module:add(sum):add(nn.CAddTable()):add(nn.ReLU(true))
+end
+
+--model:add(bottleneck(128, 128))
+model:add(bottleneck(128, 64, true, pooling_modules[3]))         -- 32x64
+model:add(bottleneck(64, 64))
+model:add(bottleneck(64, 64))
+model:add(bottleneck(64, 16, true, pooling_modules[2]))          -- 64x128
+model:add(bottleneck(16, 16))
+model:add(nn.SpatialFullConvolution(16, classes, 2, 2, 2, 2))
+return model
