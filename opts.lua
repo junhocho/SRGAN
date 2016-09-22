@@ -10,6 +10,7 @@ local opts = {}
 lapp = require 'pl.lapp'
 function opts.parse(arg)
    local opt = lapp [[
+
    Command line options:
    -m, --model       (default '')      Path & filename of network model to profile
    -p, --platform    (default cpu)     Select profiling platform (cpu|cuda)
@@ -20,6 +21,9 @@ function opts.parse(arg)
                                        [a]scii or as <model.net> in [b]inary format (a|b)
    --verbose         (default detail)  detail/medium/compact
    --MACs                              Use multiply-add when counting ops
+
+   Example:
+   th profile-model.lua --model <'path/filename.lua'> --res 1x3x231x231
 
  ]]
 
