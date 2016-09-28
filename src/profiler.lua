@@ -199,6 +199,14 @@ local function ops_sum(module, input)
    return ops
 end
 
+local function ops_mulconstant(module, input)
+   local ops = 1
+   for d = 1, input:dim() do
+      ops = ops * input:size(d)
+   end
+   return ops
+end
+
 module_handlers = {
     -- Containers
     ['nn.Sequential'] = ops_nothing,
@@ -224,6 +232,7 @@ module_handlers = {
     -- Basic modules
     ['nn.Linear'] = ops_linear,
     ['nn.Sum'] = ops_sum,
+    ['nn.MulConstant'] = ops_mulconstant,
 
     -- Spatial Modules
     ['nn.SpatialConvolution'] = ops_convolution,
