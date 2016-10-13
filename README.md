@@ -5,6 +5,7 @@ The paper is [Photo-Realistic Single Image Super-Resolution Using a Generative A
 Currently only generator part is implemented. SRResNet is implemented but not benchmarked yet. 
 I can't reproduce PSNR of bicubic in the paper, thus haven't measured the PSNR.
 
+These images are generated from LR images into 4x SR with trained with with the code. Check [results 23K iter](./results_23K/)
 ![Reproduce result](results_23K/Set14/img_005_SRF_4_LR.png_SRResnet.png)
 ![2](results_23K/Set5/img_003_SRF_4_LR.png_SRResnet.png)
 ![3](results_23K/Set5/img_005_SRF_4_LR.png_SRResnet.png)
