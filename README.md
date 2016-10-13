@@ -27,6 +27,7 @@ After then, comment these as original code and load it.
 **Only supports, cuda/cudnn backend.**
 
 ### To profile network, 
+
 	`th profile-model.lua -m models/resnet-deconv2.lua -r 16x3x24x24 -p cuda`
 
 ### To train network,
@@ -43,7 +44,8 @@ After then, comment these as original code and load it.
 
    `th run-SRResNet.lua -checkpoint_path models/9x9-15res-LR24/230000.t7 -dataset BSD100 -result_path results_23K`
 
-   -dataset can be BSD100|Set5|Set14
+   -dataset can be BSD100|Set5|Set14.
+   
    If memory is not big enough, will print 'oom' and move on.
 
 
