@@ -1,6 +1,7 @@
 require 'nn'
 require 'xlua'
 require 'sys'
+require 'pretty-nn' -- jh 
 
 local lapp = assert(require('pl.lapp'))
 local opts = assert(require('opts'))
@@ -154,3 +155,18 @@ end
 
 pf('   Forward average time on %s %s : %.2f ms', THIS, d, time.total * 1e3)
 pf('   Performance for %s %s         : %.2f G-Ops/s\n', THIS, d, totalOps * 1e-9 / time.total)
+
+print(#imgBatch)
+if opt.platform == 'cuda' then
+	imgBatch=imgBatch:cuda()
+end	
+print("check nvidia-smi")
+local loss = nn.MSECriterion():cuda()
+for iter= 1, 10 do 
+	out = net:forward(imgBatch)
+	-- local dummyTarget = out:new()
+	-- local J = loss:forward(out, dummyTarget) 
+	-- local dJ_dout = loss:backward(out, dummyTarget)
+	-- local dJ_dX = net:backward(imgBatch, dJ_dout)
+end
+print(#out)

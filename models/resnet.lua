@@ -15,7 +15,7 @@ local dataset = 'imagenet' -- imagenet/cifar10
 local iChannels
 
 local nn = require 'nn'
---require 'cunn'
+require 'cunn'
 
 local Convolution = nn.SpatialConvolution
 local Avg = nn.SpatialAveragePooling
@@ -151,12 +151,12 @@ local function ConvInit(name)
    for k,v in pairs(model:findModules(name)) do
       local n = v.kW*v.kH*v.nOutputPlane
       v.weight:normal(0,math.sqrt(2/n))
-      --if cudnn.version >= 4000 then
-      --   v.bias = nil
-      --   v.gradBias = nil
-      --else
-      --   v.bias:zero()
-      --end
+      -- if cudnn.version >= 4000 then
+      --    v.bias = nil
+      --    v.gradBias = nil
+      -- else
+      --    v.bias:zero()
+      -- end
    end
 end
 local function BNInit(name)
@@ -174,13 +174,13 @@ BNInit('nn.SpatialBatchNormalization')
 for k,v in pairs(model:findModules('nn.Linear')) do
    v.bias:zero()
 end
---model:cuda()
-
--- if opt.cudnn == 'deterministic' then
---    model:apply(function(m)
---       if m.setMode then m:setMode(1,1,1) end
---    end)
--- end
+model:cuda()
+ 
+  if opt.cudnn == 'deterministic' then
+     model:apply(function(m)
+        if m.setMode then m:setMode(1,1,1) end
+     end)
+  end
 
 model:get(1).gradInput = nil
 

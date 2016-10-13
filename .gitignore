@@ -1,3 +1,6 @@
 # Files
 *.sw*
 .DS_Store
+
+log
+*.t7
