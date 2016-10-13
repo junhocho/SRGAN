@@ -2,5 +2,5 @@
 *.sw*
 .DS_Store
 
-log
+log/*
 *.t7
