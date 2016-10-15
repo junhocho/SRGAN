@@ -12,11 +12,13 @@ cmd:text('Options')
 
 cmd:option('-model_name', '9x9-15res-LR24', 'will save checkpoints in models/model_name/ ')
 cmd:option('-checkpoint_start_from', '' , 'start training from checkpoint if given. If not given, train from scratch')
+cmd:option('-arch', '', 'if checkpoint not and arch is given, use the architecture')
+
 cmd:option('-lr', 10e-4, 'learning rate')
 cmd:option('-beta', 0.9 , 'beta')
 -- cmd:option('-iter_start', 1, 'not to overwrite previous trained model when resumed. ')
 cmd:option('-iter_end', 10e6, 'iter to end training')
-
+cmd:option('-checkpoint_save_iter', 10000, 'saver period')
 cmd:text()
 
 local opt = cmd:parse(arg or {})
@@ -28,7 +30,11 @@ if string.len(opt.checkpoint_start_from) > 0 then
 	model = loaded_checkpoint.model
 	iter_start = loaded_checkpoint.iter + 1
 else
-	model = require 'models.resnet-deconv2' -- train from scratch
+	if string.len(opt.arch) > 0 then
+		model = require(opt.arch)
+	else
+		model = require 'models.resnet-deconv2' -- train from scratch
+	end
 	iter_start = 1
 end
 model:cuda()
@@ -92,7 +98,7 @@ for iter = iter_start, opt.iter_end do -- start from checkpoint.iter +1    -- 1,
 	print('iter:' .. iter) -- debug
 	optim.adam(feval, theta, config, optim_state)
 
-	if iter % 10000 == 0 then 
+	if iter % opt.checkpoint_save_iter == 0 then 
 		local checkpoint = {}
 		checkpoint.opt = opt
 		checkpoint.iter = iter

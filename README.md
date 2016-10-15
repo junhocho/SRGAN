@@ -28,7 +28,7 @@ After then, comment these as original code and load it.
 
 ### To profile network, 
 
-	`th profile-model.lua -m models/resnet-deconv2.lua -r 16x3x24x24 -p cuda`
+`th profile-model.lua -m models/resnet-deconv2.lua -r 16x3x24x24 -p cuda`
 
 ### To train network,
 
