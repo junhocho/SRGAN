@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Files
 *.sw*
 .DS_Store
@@ -8,7 +7,7 @@ log/*
 
 imgs
 1 # Why is this keep generated?
-results_all/ # other than default results
+results_all # other than default results
 
 =======
 # Compiled Lua sources
@@ -52,4 +51,3 @@ luac.out
 *.x86_64
 *.hex
 
->>>>>>> 21ee3ca94561a61ae3988dcf46d3acf54cc8dea3
