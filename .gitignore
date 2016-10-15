@@ -5,6 +5,11 @@
 
 log/*
 *.t7
+
+imgs
+1 # Why is this keep generated?
+results_all # other than default results
+
 =======
 # Compiled Lua sources
 luac.out
