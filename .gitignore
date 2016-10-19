@@ -8,8 +8,9 @@ log/*
 results_all
 results_*
 imgs
-1 # Why is this keep generated?
 
+# Why is this keep generated?
+1
 
 
 =======
