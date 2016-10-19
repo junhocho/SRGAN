@@ -34,8 +34,8 @@ else
 		model = require(opt.arch)
 	else
 		model = require 'models.resnet-deconv2' -- train from scratch
+		iter_start = 1
 	end
-	iter_start = 1
 end
 model:cuda()
 -- -- model = torch.load('models/resnet-deconv30000.t7') 
@@ -61,20 +61,27 @@ require 'optim'
 require 'src.util'
 
 local imgBatch = {} -- input SR, LR
-imgBatch.batchNum = 16
 
 -- VOC
 -- local datasetPath = "/home/junho/data/VOCdevkit/VOC2012/JPEGImages/"
 -- imgBatch.imgPaths, imgBatch.imgNum = prepImgs(datasetPath)
 
-local datasetPath = "/home/junho/data/ImageNet/"
--- imgBatch.imgPaths, imgBatch.imgNum = prepImageNet(datasetPath)
--- Save paths
---torch.save('imgBatch.t7', imgBatch)
+local do_prepImageNet = false
+
+if do_prepImageNet then
+	local datasetPath = "/home/junho/data/ImageNet/"
+	imgBatch.imgPaths, imgBatch.imgNum = prepImageNet(datasetPath)
+	print('prepImageNet')
+	-- Save paths
+	torch.save('imgBatch.t7', imgBatch)
+else
+	imgBatch = torch.load('imgBatch.t7')
+end
 
 
-local imgBatch = torch.load('imgBatch.t7')
 
+imgBatch.batchNum = 16
+imgBatch.res = 96 -- 288-- 288
 -- print(imgBatch.imgPaths)
 print('ImageNet loaded, # of imgs:' .. imgBatch.imgNum)
 

@@ -1,10 +1,10 @@
 require 'image'
 
 
-function crop_SR_LR_patches(imgPath)
+function crop_SR_LR_patches(imgPath, res)
   local r = 4
-  local w_SRPatch = 96 -- 288 -- 96 -- 384
-  local h_SRPatch = 96 -- 288 -- 96 -- 384
+  local w_SRPatch = res -- 96 -- 288 -- 96 -- 384
+  local h_SRPatch = res -- 96 -- 288 -- 96 -- 384
 
   local w_LRPatch = w_SRPatch/r
   local h_LRPatch = h_SRPatch/r
@@ -49,7 +49,7 @@ function setBatch(B) -- imgPaths, imgNum) -- s, batchNum) -- TODO img --> imgs &
 
 	-- local img = image.lena():cuda()
 	local SRPatch , LRPatch
-	SRPatch, LRPatch = crop_SR_LR_patches(imgs[1])
+	SRPatch, LRPatch = crop_SR_LR_patches(imgs[1], B.res)
 	B.SR = SRPatch:clone():view(1, 3, SRPatch:size(2), SRPatch:size(3))
 	B.LR = LRPatch:clone():view(1, 3, LRPatch:size(2), LRPatch:size(3))
 	
@@ -58,7 +58,7 @@ function setBatch(B) -- imgPaths, imgNum) -- s, batchNum) -- TODO img --> imgs &
 	-- image.save('SRPatch_sample.png', SRPatch)
 	-- image.save('LRPatch_sample.png', LRPatch)
 	for i=2, B.batchNum do -- concat to SRPatch and LRPatch
-		SRPatch, LRPatch = crop_SR_LR_patches(imgs[i])
+		SRPatch, LRPatch = crop_SR_LR_patches(imgs[i], B.res)
 		B.SR = torch.cat(B.SR,  SRPatch:clone():view(1, 3, SRPatch:size(2), SRPatch:size(3)), 1)
 		B.LR = torch.cat(B.LR, LRPatch:clone():view(1, 3, LRPatch:size(2), LRPatch:size(3)), 1)
 		-- print(imgs[i]) -- debug
