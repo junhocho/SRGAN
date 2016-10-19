@@ -6,6 +6,7 @@ log/*
 *.t7
 
 results_all
+results_*
 imgs
 1 # Why is this keep generated?
 
