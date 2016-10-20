@@ -1,6 +1,6 @@
 # SRGAN
 
-This is implementation of SRGAN under working.
+This is implementation of SRGAN **under working**.
 
 **Currently only generator part is implemented. SRResNet is implemented but not benchmarked yet.**
 SRGAN is hopefully implementation soon.
@@ -8,10 +8,10 @@ I can't reproduce PSNR of bicubic in the paper, thus haven't measured the PSNR.
 
 The paper is [Photo-Realistic Single Image Super-Resolution Using a Generative Adversarial Network](https://arxiv.org/abs/1609.04802).
 
-These images are generated from LR images into 4x SR with trained with with the code. Check [results 23K iter](./results_23K/)
+These images are generated from LR images into 4x SR with trained with with the code. Check [results 700K iter](./results_9x9-LR24_700K)
 ![Reproduce result](results_23K/Set14/img_005_SRF_4_LR.png_SRResnet.png)
-![2](results_23K/Set5/img_003_SRF_4_LR.png_SRResnet.png)
-![3](results_23K/Set5/img_005_SRF_4_LR.png_SRResnet.png)
+![2](results_9x9-LR24_700K/Set5/img_003_SRF_4_LR.png_SRResnet.png)
+![3](results_9x9-LR24_700K/Set6/img_005_SRF_4_LR.png_SRResnet.png)
 	
 
 This repository started from altering [Torch7-Network Profiler](https://github.com/e-lab/Torch7-profiling).
