@@ -8,10 +8,12 @@ I can't reproduce PSNR of bicubic in the paper, thus haven't measured the PSNR.
 
 The paper is [Photo-Realistic Single Image Super-Resolution Using a Generative Adversarial Network](https://arxiv.org/abs/1609.04802).
 
-These images are generated from LR images into 4x SR with trained with with the code. Check [results 700K iter](./demo_results/)
+These images are generated from LR images into 4x SR with trained with with the code. Check [23K results](./demo_results/)
 ![Reproduce result](demo_results/Set14/img_005_SRF_4_LR.png_SRResnet.png)
 ![2](demo_results/Set5/img_003_SRF_4_LR.png_SRResnet.png)
 ![3](demo_results/Set6/img_005_SRF_4_LR.png_SRResnet.png)
+
+There more experiments going on. For ex, using preactivation ResNet, 4x4 deconvolution layer to [remove artifacts](http://distill.pub/2016/deconv-checkerboard/).
 	
 
 This repository started from altering [Torch7-Network Profiler](https://github.com/e-lab/Torch7-profiling).
