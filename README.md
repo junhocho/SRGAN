@@ -34,6 +34,12 @@ After then, comment these as original code and load it.
 
 ### To train network,
 
+First, parse ImageNet dataset. Manually set `datasetPath` variable as your ImageNet path. The path is expected to have 1000 sub category folders.
+
+`th prepImageNet.lua`
+
+Then, start train with
+
    `th train-SRResNet.lua -model_name 9x9-15res-LR24`
    It will save checkpoints in `model_name` directory.
    
