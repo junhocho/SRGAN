@@ -10,7 +10,7 @@ cmd:text('Train SRResNet model.')
 cmd:text()
 cmd:text('Options')
 
-cmd:option('-model_name', '9x9-15res-LR24', 'will save checkpoints in models/model_name/ ')
+cmd:option('-model_name', '9x9-15res-LR24', 'will save checkpoints in checkpoints/model_name/ ')
 cmd:option('-checkpoint_start_from', '' , 'start training from checkpoint if given. If not given, train from scratch')
 cmd:option('-arch', '', 'if checkpoint not and arch is given, use the architecture')
 
