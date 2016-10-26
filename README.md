@@ -11,7 +11,7 @@ The paper is [Photo-Realistic Single Image Super-Resolution Using a Generative A
 These images are generated from LR images into 4x SR with trained with with the code. Check [23K results](./demo_results/)
 ![Reproduce result](demo_results/Set14/img_005_SRF_4_LR.png_SRResnet.png)
 ![2](demo_results/Set5/img_003_SRF_4_LR.png_SRResnet.png)
-![3](demo_results/Set6/img_005_SRF_4_LR.png_SRResnet.png)
+![3](demo_results/Set5/img_005_SRF_4_LR.png_SRResnet.png)
 
 There more experiments going on. For ex, using preactivation ResNet, 4x4 deconvolution layer to [remove artifacts](http://distill.pub/2016/deconv-checkerboard/).
 	
@@ -56,4 +56,11 @@ Then, start train with
    
    If memory is not big enough, will print 'oom' and move on.
 
+# Currently Doing
+
+1. I've tried training in [preactviation resnet](https://arxiv.org/abs/1603.05027) and [removing artifacts by deconv](http://distill.pub/2016/deconv-checkerboard/). So far, analyzing what are pros and cons.
+
+2. ContentLoss. Inlcuded `VGG/saveVGG19.sh` to build VGG loss.
+
+3. PSNR
 
