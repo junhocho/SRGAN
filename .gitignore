@@ -6,6 +6,10 @@ log/*
 *.t7
 
 results_all
+results_preact*
+
+checkpoints
+VGG/VGG*
 
 # Why is this keep generated?
 1

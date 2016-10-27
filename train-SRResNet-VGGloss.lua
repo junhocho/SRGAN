@@ -63,6 +63,7 @@ if VGGloss_type == '2,2' then
 	for _ = 1,28 do 
 		VGG19:remove()
 	end
+	VGG19:remove(5) -- remove pooling
 elseif VGGloss_type == '5,4' then
 	VGG19:remove()
 end

@@ -68,7 +68,6 @@ Then, start train with
 - `th -ldisplay.start 8000 0.0.0.0`
 - `th train-SRResNet-VGGloss.lua -arch models/resnet-4x4deconv-preact.lua  -model_name VGGloss-4x4deconv -checkpoint_save_iter 1000`
 - localhost:8000 shows training visualization
-
 ![vis](imgs/vis_training.png)
 
 3. PSNR
