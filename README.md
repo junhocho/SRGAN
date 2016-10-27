@@ -62,5 +62,8 @@ Then, start train with
 
 2. ContentLoss. Inlcuded `VGG/saveVGG19.sh` to build VGG loss.
 
+- `luarocks install loadcaffe`
+- `luarocks install https://raw.githubusercontent.com/szym/display/master/display-scm-0.rockspec` -- [display: a browser-based graphics server](https://github.com/szym/display)
+
 3. PSNR
 
