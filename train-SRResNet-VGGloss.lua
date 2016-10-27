@@ -39,6 +39,7 @@ if string.len(opt.checkpoint_start_from) > 0 then
 else
 	if string.len(opt.arch) > 0 then
 		model = require(opt.arch)
+		iter_start = 1
 	else
 		model = require 'models.resnet-deconv2' -- train from scratch
 		iter_start = 1
@@ -111,7 +112,7 @@ end
 
 
 
-imgBatch.batchNum = 16
+imgBatch.batchNum = 32
 imgBatch.res = 96 --192 -- 288-- 288
 -- print(imgBatch.imgPaths)
 print('ImageNet loaded, # of imgs:' .. imgBatch.imgNum)
@@ -138,21 +139,22 @@ function feval(theta)
 	local h_x = model:forward(X)
 
 	-- VGG feature on GT
-	local targetContent = VGG19:forward(vgg_preprocess(imgBatch.SR)):clone() -- output is pointer
+	local vgg_GT = VGG19:forward(vgg_preprocess(imgBatch.SR)):clone() -- output is pointer
 	-- VGG feature on genSR
-	local h_x_preproc = vgg_preprocess(h_x)
-	local vgg_h_x = VGG19:forward(h_x_preproc)
+	local hp_x = vgg_preprocess(h_x) -- hp_x is preprocessof h_x
+	local vgg_hp_x = VGG19:forward(hp_x)
 	-- VGG loss
-	local J = loss:forward(vgg_h_x, targetContent)
-	local dJ_vgg = loss:backward(vgg_h_x, targetContent)
+	local J = loss:forward(vgg_hp_x, vgg_GT)
+	local dJ_dvgg_hp_x = loss:backward(vgg_hp_x, vgg_GT)
 
 	print(J)
-	-- print(#vgg_h_x[{{1},{1},{},{}}])
 
-	local dJ_dh_x = VGG19:backward(h_x_preproc, dJ_vgg)
-    -- 1debugger.enter()
-	model:backward(X, dJ_dh_x:div(255):index(2, torch.LongTensor{3, 2, 1})) --vgg_deprocess(dJ_dh_x))
-
+	local dJ_dhp_x = VGG19:backward(hp_x, dJ_dvgg_hp_x)
+    local dJ_dh_x = dJ_dhp_x:div(255):index(2, torch.LongTensor{3,2,1}) -- deprocess gradient.
+	
+	-- debugger.enter()
+	
+	model:backward(X, dJ_dh_x) 
 
 	return J, gradTheta
 end
@@ -163,11 +165,13 @@ for iter = iter_start, opt.iter_end do -- start from checkpoint.iter +1    -- 1,
 	setBatch(imgBatch)
 	print('iter:' .. iter) -- debug
 	optim.adam(feval, theta, config, optim_state)
+
+	-- Visualize
 	if iter % 10 == 0 then
 		local X = imgBatch.LR[1]
+		local GT = imgBatch.SR[1]:view(3,96,96)
 		local Gen = model:forward(X:view(1,3,24,24)):view(3,96,96)
-		display.image(X)
-		display.image(Gen)
+		display.image(torch.cat(GT, Gen))
 	end
 
 	if iter % opt.checkpoint_save_iter == 0 then 
