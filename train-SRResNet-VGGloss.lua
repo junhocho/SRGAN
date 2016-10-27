@@ -2,7 +2,14 @@ require 'nn'
 require 'image'
 require 'cunn'
 require 'cudnn'
--- debugger = require 'fb.debugger'
+
+
+debugger = require 'fb.debugger'
+
+-- Debugging
+display = require 'display'
+
+
 
 cmd = torch.CmdLine()
 cmd:text()
@@ -14,7 +21,7 @@ cmd:option('-model_name', '9x9-15res-LR24', 'will save checkpoints in checkpoint
 cmd:option('-checkpoint_start_from', '' , 'start training from checkpoint if given. If not given, train from scratch')
 cmd:option('-arch', '', 'if checkpoint not and arch is given, use the architecture')
 
-cmd:option('-lr', 10e-4, 'learning rate')
+cmd:option('-lr', 10e-5, 'learning rate')
 cmd:option('-beta', 0.9 , 'beta')
 -- cmd:option('-iter_start', 1, 'not to overwrite previous trained model when resumed. ')
 cmd:option('-iter_end', 10e6, 'iter to end training')
@@ -37,7 +44,30 @@ else
 		iter_start = 1
 	end
 end
+print("resnet loaded")
 model:cuda()
+
+
+-- 1. Decide feature map in VGG19 for Euclidean loss.
+-- 2. ~~Forward imgBatch.imgNum x 2 (Generated and GT)to VGG19.~~
+--   --> model:add(VGG) and seperate VGG.
+-- 3. Divide into Feature map of Generated and GT.
+-- 4. Compute MSE and backpropagate into Generator.
+
+-- VGG model load
+VGG19 = torch.load('VGG/VGG19.t7')
+
+local VGGloss_type = '2,2' -- '5,4'
+if VGGloss_type == '2,2' then
+	for _ = 1,28 do 
+		VGG19:remove()
+	end
+elseif VGGloss_type == '5,4' then
+	VGG19:remove()
+end
+print("VGG loaded")
+VGG19:cuda()
+
 -- -- model = torch.load('models/resnet-deconv30000.t7') 
 -- model = require 'models.resnet-deconv2'
 -- model:cuda
@@ -47,6 +77,7 @@ local saveCheckpointPath = paths.concat('checkpoints/', opt.model_name)
 -- loss function
 local loss = nn.MSECriterion():cuda()
 local theta, gradTheta = model:getParameters()
+local theta_vgg, gradTheta_vgg = VGG19:getParameters()
 
 -- config to adam
 local config = {}
@@ -81,20 +112,48 @@ end
 
 
 imgBatch.batchNum = 16
-imgBatch.res = 96 -- 288-- 288
+imgBatch.res = 96 --192 -- 288-- 288
 -- print(imgBatch.imgPaths)
 print('ImageNet loaded, # of imgs:' .. imgBatch.imgNum)
 
+
+local vgg_mean = {103.939, 116.779, 123.68} 
+function vgg_preprocess(img)
+	local mean = img.new(vgg_mean):view(1, 3, 1, 1):expandAs(img)
+	local perm = torch.LongTensor{3, 2, 1}
+	return img:index(2, perm):mul(255):add(-1, mean) 
+end
+
+function vgg_deprocess(img)
+	local mean = img.new(vgg_mean):view(1, 3, 1, 1):expandAs(img)
+	local perm = torch.LongTensor{3, 2, 1}
+	return (img + mean):div(255):index(2, perm)
+end
+
 function feval(theta)
 	gradTheta:zero()
+	gradTheta_vgg:zero()
 	-- print(imgBatch.LR:cuda())
 	local X = imgBatch.LR 
 	local h_x = model:forward(X)
-	local J = loss:forward(h_x, imgBatch.SR)
-	-- print(#h_x)
-	local dJ_dh_x = loss:backward(h_x, imgBatch.SR)
+
+	-- VGG feature on GT
+	local targetContent = VGG19:forward(vgg_preprocess(imgBatch.SR)):clone() -- output is pointer
+	-- VGG feature on genSR
+	local h_x_preproc = vgg_preprocess(h_x)
+	local vgg_h_x = VGG19:forward(h_x_preproc)
+	-- VGG loss
+	local J = loss:forward(vgg_h_x, targetContent)
+	local dJ_vgg = loss:backward(vgg_h_x, targetContent)
+
 	print(J)
-	model:backward(X, dJ_dh_x)
+	-- print(#vgg_h_x[{{1},{1},{},{}}])
+
+	local dJ_dh_x = VGG19:backward(h_x_preproc, dJ_vgg)
+    -- 1debugger.enter()
+	model:backward(X, dJ_dh_x:div(255):index(2, torch.LongTensor{3, 2, 1})) --vgg_deprocess(dJ_dh_x))
+
+
 	return J, gradTheta
 end
 
@@ -104,6 +163,12 @@ for iter = iter_start, opt.iter_end do -- start from checkpoint.iter +1    -- 1,
 	setBatch(imgBatch)
 	print('iter:' .. iter) -- debug
 	optim.adam(feval, theta, config, optim_state)
+	if iter % 10 == 0 then
+		local X = imgBatch.LR[1]
+		local Gen = model:forward(X:view(1,3,24,24)):view(3,96,96)
+		display.image(X)
+		display.image(Gen)
+	end
 
 	if iter % opt.checkpoint_save_iter == 0 then 
 		local checkpoint = {}
