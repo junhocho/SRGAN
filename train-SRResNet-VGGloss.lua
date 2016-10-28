@@ -4,7 +4,6 @@ require 'cunn'
 require 'cudnn'
 
 
-debugger = require 'fb.debugger'
 
 -- Debugging
 display = require 'display'
@@ -113,8 +112,8 @@ end
 
 
 
-imgBatch.batchNum = 32
-imgBatch.res = 96 --192 -- 288-- 288
+imgBatch.batchNum = 4
+imgBatch.res = 200 -- 288 -- 288-- 288
 -- print(imgBatch.imgPaths)
 print('ImageNet loaded, # of imgs:' .. imgBatch.imgNum)
 
