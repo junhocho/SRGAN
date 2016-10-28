@@ -32,6 +32,7 @@ if string.len(opt.checkpoint_start_from) > 0 then
 else
 	if string.len(opt.arch) > 0 then
 		model = require(opt.arch)
+		iter_start = 1 
 	else
 		model = require 'models.resnet-deconv2' -- train from scratch
 		iter_start = 1
