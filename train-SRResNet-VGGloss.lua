@@ -112,8 +112,8 @@ end
 
 
 
-imgBatch.batchNum = 4
-imgBatch.res = 200 -- 288 -- 288-- 288
+imgBatch.batchNum = 8-- 4
+imgBatch.res = 288 -- 288-- 288
 -- print(imgBatch.imgPaths)
 print('ImageNet loaded, # of imgs:' .. imgBatch.imgNum)
 
@@ -167,10 +167,10 @@ for iter = iter_start, opt.iter_end do -- start from checkpoint.iter +1    -- 1,
 	optim.adam(feval, theta, config, optim_state)
 
 	-- Visualize
-	if iter % 10 == 0 then
+	if iter % 20 == 1 then
 		local X = imgBatch.LR[1]
-		local GT = imgBatch.SR[1]:view(3,96,96)
-		local Gen = model:forward(X:view(1,3,24,24)):view(3,96,96)
+		local GT = imgBatch.SR[1]:view(3,imgBatch.res,imgBatch.res)
+		local Gen = model:forward(X:view(1,3,imgBatch.res/4,imgBatch.res/4)):view(3,imgBatch.res,imgBatch.res)
 		display.image(torch.cat(GT, Gen))
 	end
 
