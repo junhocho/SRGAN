@@ -138,10 +138,13 @@ if dataset == 'imagenet' then
    model:add(ReLU(true))
 
    -- Final conv 64 -> 3 color channel
-   -- model:add(Convolution(64,3,3,3,1,1,1,1))
+   model:add(Convolution(64,3,3,3,1,1,1,1))
    -- model:add(Convolution(64,3,5,5,1,1,2,2))
    -- model:add(Convolution(64,3,7,7,1,1,3,3))
-   model:add(Convolution(64,3,9,9,1,1,4,4))
+   -- model:add(Convolution(64,3,9,9,1,1,4,4))
+   model:add(nn.Tanh())
+   model:add(nn.AddConstant(1))
+   model:add(nn.MulConstant(1/2))
 elseif dataset == 'cifar10' then
    -- Model type specifies number of layers for CIFAR-10 model
    assert((depth - 2) % 6 == 0, 'depth should be one of 20, 32, 44, 56, 110, 1202')
