@@ -52,9 +52,17 @@ Then, start train with
 
    `th run-SRResNet.lua -checkpoint_path models/9x9-15res-LR24/230000.t7 -dataset BSD100 -result_path results_23K`
 
-   -dataset can be BSD100|Set5|Set14.
+   -dataset can be `BSD100|Set5|Set14.`
    
    If memory is not big enough, will print 'oom' and move on.
+
+### Model weight
+   
+For those who need weight, download this weight in your 
+
+`./checkpoints/9x9-15res-LR24` : [700K iter](https://www.dropbox.com/s/pvq5plly148brpy/700000.t7?dl=0)
+`./checkpoints/VGGloss-4x4deconv` : [24K iter](: https://www.dropbox.com/s/ngru09rhfjzfos0/24000.t7?dl=0)
+
 
 # Currently Doing
 
@@ -64,7 +72,8 @@ Then, start train with
 
 - `luarocks install loadcaffe`
 - Download VGG : `cd VGG; ./saveVGG19`
-- `luarocks install https://raw.githubusercontent.com/szym/display/master/display-scm-0.rockspec` -- [display: a browser-based graphics server](https://github.com/szym/display)
+- `luarocks install https://raw.githubusercontent.com/szym/display/master/display-scm-0.rockspec` 
+	- Install [display: a browser-based graphics server](https://github.com/szym/display)
 - `th -ldisplay.start 8000 0.0.0.0`
 - `th train-SRResNet-VGGloss.lua -arch models/resnet-4x4deconv-preact.lua  -model_name VGGloss-4x4deconv -checkpoint_save_iter 1000`
 - localhost:8000 shows training visualization
