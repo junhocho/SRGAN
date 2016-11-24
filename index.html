@@ -1,0 +1,138 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Srgan by junhocho</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/github-light.css">
+    <meta name="viewport" content="width=device-width">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Srgan</h1>
+        <p>Implementation of [Photo-Realistic Single Image Super-Resolution Using a Generative Adversarial Network arXiv:1609.04802v2]</p>
+
+        <p class="view"><a href="https://github.com/junhocho/SRGAN">View the Project on GitHub <small>junhocho/SRGAN</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/junhocho/SRGAN/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/junhocho/SRGAN/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/junhocho/SRGAN">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>
+<a id="srgan" class="anchor" href="#srgan" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>SRGAN</h1>
+
+<p>This is implementation of SRGAN <strong>under working</strong>.</p>
+
+<p><strong>Currently only generator part is implemented. SRResNet is implemented but not benchmarked yet.</strong>
+SRGAN is hopefully implementation soon.
+I can't reproduce PSNR of bicubic in the paper, thus haven't measured the PSNR.</p>
+
+<p>The paper is <a href="https://arxiv.org/abs/1609.04802">Photo-Realistic Single Image Super-Resolution Using a Generative Adversarial Network</a>.</p>
+
+<p>These images are generated from LR images into 4x SR with trained with with the code. Check <a href="./demo_results/">23K results</a>
+<img src="demo_results/Set14/img_005_SRF_4_LR.png_SRResnet.png" alt="Reproduce result">
+<img src="demo_results/Set5/img_003_SRF_4_LR.png_SRResnet.png" alt="2">
+<img src="demo_results/Set5/img_005_SRF_4_LR.png_SRResnet.png" alt="3"></p>
+
+<p>There more experiments going on. For ex, using preactivation ResNet, 4x4 deconvolution layer to <a href="http://distill.pub/2016/deconv-checkerboard/">remove artifacts</a>.</p>
+
+<p>This repository started from altering <a href="https://github.com/e-lab/Torch7-profiling">Torch7-Network Profiler</a>.
+Used ResNet but changed a lot from original. Final using model is <code>models/resnet-deconv2.lua</code>.
+The model trained uses 9x9 conv for first and last Conv layers and 15 residual blocks.</p>
+
+<p>LR Patch is 3x24x24 and SR Patch is 3x96x96. It was vague in the paper that 96x96x is either LR or SR but LR96 was untrainable because of not enough memory (GTX1080).</p>
+
+<p>Trained with ImageNet (50 images from 1000 classes that have 3 channel and bigger than 3x288x288).
+For first time, just uncomment <code>prepImageNet</code> to have paths to images. Save it as <code>imgBatch.t7</code>
+After then, comment these as original code and load it.</p>
+
+<p><strong>Only supports, cuda/cudnn backend.</strong></p>
+
+<h3>
+<a id="to-profile-network" class="anchor" href="#to-profile-network" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>To profile network,</h3>
+
+<p><code>th profile-model.lua -m models/resnet-deconv2.lua -r 16x3x24x24 -p cuda</code></p>
+
+<h3>
+<a id="to-train-network" class="anchor" href="#to-train-network" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>To train network,</h3>
+
+<p>First, parse ImageNet dataset. Manually set <code>datasetPath</code> variable as your ImageNet path. The path is expected to have 1000 sub category folders.</p>
+
+<p><code>th prepImageNet.lua</code></p>
+
+<p>Then, start train with</p>
+
+<p><code>th train-SRResNet.lua -model_name 9x9-15res-LR24</code>
+   It will save checkpoints in <code>model_name</code> directory.</p>
+
+<h3>
+<a id="to-resume-training" class="anchor" href="#to-resume-training" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>To resume training,</h3>
+
+<p><code>th train-SRResNet.lua -model_name 9x9-15res-LR24 -checkpoint_start_from models/9x9-15res-LR24/230000.t7</code></p>
+
+<h3>
+<a id="to-runtest-model" class="anchor" href="#to-runtest-model" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>To run/test model,</h3>
+
+<p><code>th run-SRResNet.lua -checkpoint_path models/9x9-15res-LR24/230000.t7 -dataset BSD100 -result_path results_23K</code></p>
+
+<p>-dataset can be <code>BSD100|Set5|Set14.</code></p>
+
+<p>If memory is not big enough, will print 'oom' and move on.</p>
+
+<h3>
+<a id="model-weight" class="anchor" href="#model-weight" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Model weight</h3>
+
+<p>For those who need weight, download this weight in your </p>
+
+<p><code>./checkpoints/9x9-15res-LR24</code> : <a href="https://www.dropbox.com/s/pvq5plly148brpy/700000.t7?dl=0">700K iter</a>
+<code>./checkpoints/VGGloss-4x4deconv</code> : 24K iter</p>
+
+<h1>
+<a id="currently-doing" class="anchor" href="#currently-doing" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Currently Doing</h1>
+
+<ol>
+<li><p>I've tried training in <a href="https://arxiv.org/abs/1603.05027">preactviation resnet</a> and <a href="http://distill.pub/2016/deconv-checkerboard/">removing artifacts by deconv</a>. So far, analyzing what are pros and cons.</p></li>
+<li><p>ContentLoss. Inlcuded <code>VGG/saveVGG19.sh</code> to build VGG loss.</p></li>
+</ol>
+
+<ul>
+<li><code>luarocks install loadcaffe</code></li>
+<li>Download VGG : <code>cd VGG; ./saveVGG19</code>
+</li>
+<li>
+<code>luarocks install https://raw.githubusercontent.com/szym/display/master/display-scm-0.rockspec</code> 
+
+<ul>
+<li>Install <a href="https://github.com/szym/display">display: a browser-based graphics server</a>
+</li>
+</ul>
+</li>
+<li><code>th -ldisplay.start 8000 0.0.0.0</code></li>
+<li><code>th train-SRResNet-VGGloss.lua -arch models/resnet-4x4deconv-preact.lua  -model_name VGGloss-4x4deconv -checkpoint_save_iter 1000</code></li>
+<li><p>localhost:8000 shows training visualization
+<img src="imgs/vis_training.png" alt="vis"></p></li>
+</ul>
+
+<ol>
+<li>PSNR</li>
+</ol>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/junhocho">junhocho</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
